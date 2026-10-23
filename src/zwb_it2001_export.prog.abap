@@ -1,7 +1,8 @@
 *&---------------------------------------------------------------------*
 *& Report ZWB_IT2001_EXPORT
 *&---------------------------------------------------------------------*
-*& Eksport infotypu 2001 do pliku JSON z zastępczymi numerami osobowymi.
+*& Eksport danych HR (infotypy i TEVEN, lista w ZCL_WB_HR_DATA_EXPORT)
+*& do jednego pliku JSON z zastępczymi numerami osobowymi.
 *& Wiersze nachodzące na okres są przycinane do dat z ekranu selekcji.
 *&---------------------------------------------------------------------*
 REPORT zwb_it2001_export.
@@ -43,9 +44,9 @@ START-OF-SELECTION.
 *&---------------------------------------------------------------------*
 FORM main.
 
-  DATA lo_export TYPE REF TO zcl_wb_it2001_export.
-  DATA lt_map TYPE zcl_wb_it2001_export=>tt_pernr_map.
-  DATA ls_map LIKE LINE OF lt_map.
+  DATA lo_export TYPE REF TO zcl_wb_hr_data_export.
+  DATA lt_mapping TYPE zif_wb_field_masker=>tt_mapping.
+  DATA ls_mapping LIKE LINE OF lt_mapping.
   DATA lt_output TYPE tt_output.
   DATA ls_output TYPE ty_output.
   DATA lv_fullpath TYPE string.
@@ -58,10 +59,11 @@ FORM main.
 
   lo_export->execute(
     EXCEPTIONS
-      wrong_period  = 1
-      no_data       = 2
-      random_failed = 3
-      OTHERS        = 4 ).
+      wrong_period   = 1
+      no_data        = 2
+      read_failed    = 3
+      masking_failed = 4
+      OTHERS         = 5 ).
   IF sy-subrc <> 0.
     MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno
       WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
@@ -90,10 +92,10 @@ FORM main.
     MESSAGE s007(zwb_it2001) WITH lv_fullpath.
   ENDIF.
 
-  lt_map = lo_export->get_pernr_map( ).
-  LOOP AT lt_map INTO ls_map.
-    ls_output-prawdziwy_pernr = ls_map-pernr_real.
-    ls_output-pernr_po_serializacji = ls_map-pernr_anon.
+  lt_mapping = lo_export->get_mapping( 'PERNR' ).
+  LOOP AT lt_mapping INTO ls_mapping.
+    ls_output-prawdziwy_pernr = ls_mapping-original.
+    ls_output-pernr_po_serializacji = ls_mapping-masked.
     APPEND ls_output TO lt_output.
   ENDLOOP.
 

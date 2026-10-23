@@ -11,8 +11,8 @@
    <TPOOL>
     <item>
      <ID>R</ID>
-     <ENTRY>Eksport IT2001 do JSON z anonimizacją PERNR</ENTRY>
-     <LENGTH>43</LENGTH>
+     <ENTRY>Eksport danych HR do JSON z anonimizacją PERNR</ENTRY>
+     <LENGTH>46</LENGTH>
     </item>
     <item>
      <ID>I</ID>

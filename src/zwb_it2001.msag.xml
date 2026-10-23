@@ -18,13 +18,13 @@
      <SPRSL>L</SPRSL>
      <ARBGB>ZWB_IT2001</ARBGB>
      <MSGNR>002</MSGNR>
-     <TEXT>Brak danych IT2001 dla podanych kryteriów</TEXT>
+     <TEXT>Brak danych dla podanych kryteriów</TEXT>
     </T100>
     <T100>
      <SPRSL>L</SPRSL>
      <ARBGB>ZWB_IT2001</ARBGB>
      <MSGNR>003</MSGNR>
-     <TEXT>Nie udało się wylosować unikalnego zastępczego numeru osobowego</TEXT>
+     <TEXT>Nie udało się wylosować unikalnej wartości zastępczej</TEXT>
     </T100>
     <T100>
      <SPRSL>L</SPRSL>
@@ -55,6 +55,18 @@
      <ARBGB>ZWB_IT2001</ARBGB>
      <MSGNR>008</MSGNR>
      <TEXT>Zapis pliku anulowany przez użytkownika</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>009</MSGNR>
+     <TEXT>Brak metody maskowania pola &amp;1 (typ danych &amp;2)</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>010</MSGNR>
+     <TEXT>Błąd odczytu tabeli &amp;1</TEXT>
     </T100>
    </T100>
   </asx:values>

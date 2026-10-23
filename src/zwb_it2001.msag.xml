@@ -68,6 +68,24 @@
      <MSGNR>010</MSGNR>
      <TEXT>Błąd odczytu tabeli &amp;1</TEXT>
     </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>011</MSGNR>
+     <TEXT>Niepoprawny plik JSON: &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>012</MSGNR>
+     <TEXT>Błąd odczytu pliku &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>013</MSGNR>
+     <TEXT>Plik nie zawiera okresu danych (PERIOD)</TEXT>
+    </T100>
    </T100>
   </asx:values>
  </asx:abap>

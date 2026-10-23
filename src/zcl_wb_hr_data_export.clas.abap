@@ -28,6 +28,15 @@ CLASS zcl_wb_hr_data_export DEFINITION
         masked_fields   TYPE tt_field_range,
       END OF ty_source.
     TYPES tt_sources TYPE STANDARD TABLE OF ty_source WITH KEY tabname.
+    TYPES:
+      " Okres, którego dotyczą dane w pliku (element PERIOD w JSON)
+      BEGIN OF ty_period,
+        begda TYPE begda,
+        endda TYPE endda,
+      END OF ty_period.
+
+    "! Nazwa elementu JSON z okresem danych
+    CONSTANTS c_period TYPE string VALUE 'PERIOD'.
 
     CLASS-METHODS class_constructor.
 
@@ -73,7 +82,8 @@ CLASS zcl_wb_hr_data_export DEFINITION
       RETURNING
         VALUE(rt_mapping) TYPE zif_wb_field_masker=>tt_mapping.
 
-    "! Wszystkie tabele w jednym JSON: {"PA2001":[...],"TEVEN":[...],...} (UTF-8)
+    "! Okres i wszystkie tabele w jednym JSON (UTF-8):
+    "! {"PERIOD":{"BEGDA":...,"ENDDA":...},"PA0000":[...],...,"TEVEN":[...]}
     METHODS serialize_json
       RETURNING
         VALUE(rv_json) TYPE xstring.
@@ -756,6 +766,14 @@ CLASS zcl_wb_hr_data_export IMPLEMENTATION.
     DATA lt_source TYPE abap_trans_srcbind_tab.
     DATA ls_source LIKE LINE OF lt_source.
     DATA ls_result TYPE ty_result.
+    DATA ls_period TYPE ty_period.
+
+    " Okres zapisany w pliku, żeby odbiorca wiedział, z jakiego czasu są dane
+    ls_period-begda = mv_begda.
+    ls_period-endda = mv_endda.
+    ls_source-name = c_period.
+    GET REFERENCE OF ls_period INTO ls_source-value.
+    APPEND ls_source TO lt_source.
 
     " Każda tabela jako osobna tablica w jednym obiekcie JSON
     LOOP AT mt_results INTO ls_result.

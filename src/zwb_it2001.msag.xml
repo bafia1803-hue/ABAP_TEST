@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZWB_IT2001</ARBGB>
+    <MASTERLANG>L</MASTERLANG>
+    <STEXT>Eksport IT2001 z anonimizacją</STEXT>
+   </T100A>
+   <T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>Data początkowa jest późniejsza niż data końcowa</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Brak danych IT2001 dla podanych kryteriów</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>Nie udało się wylosować unikalnego zastępczego numeru osobowego</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>Błąd okna wyboru pliku</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Błąd zapisu pliku &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>Zapis pliku nie jest możliwy w trybie tła</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>Plik zapisany: &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_IT2001</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>Zapis pliku anulowany przez użytkownika</TEXT>
+    </T100>
+   </T100>
+  </asx:values>
+ </asx:abap>
+</abapGit>

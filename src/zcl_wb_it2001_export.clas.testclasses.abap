@@ -5,9 +5,9 @@ CLASS ltcl_export DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     METHODS clip_to_period FOR TESTING.
     METHODS clip_removes_outside FOR TESTING.
-    METHODS map_is_unique FOR TESTING RAISING zcx_wb_it2001_export.
-    METHODS apply_replaces_pernr FOR TESTING RAISING zcx_wb_it2001_export.
-    METHODS begda_after_endda FOR TESTING.
+    METHODS map_is_unique FOR TESTING.
+    METHODS apply_replaces_pernr FOR TESTING.
+    METHODS wrong_period FOR TESTING.
 
 ENDCLASS.
 
@@ -18,6 +18,7 @@ CLASS ltcl_export IMPLEMENTATION.
 
     DATA lt_data TYPE zcl_wb_it2001_export=>tt_p2001.
     DATA ls_data LIKE LINE OF lt_data.
+    DATA lv_exp TYPE d.
 
     ls_data-pernr = '00000001'.
     ls_data-begda = '20250101'.
@@ -37,12 +38,16 @@ CLASS ltcl_export IMPLEMENTATION.
         ct_data  = lt_data ).
 
     READ TABLE lt_data INTO ls_data INDEX 1.
-    cl_abap_unit_assert=>assert_equals( act = ls_data-begda exp = '20250301' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-endda exp = '20250331' ).
+    lv_exp = '20250301'.
+    cl_abap_unit_assert=>assert_equals( act = ls_data-begda exp = lv_exp ).
+    lv_exp = '20250331'.
+    cl_abap_unit_assert=>assert_equals( act = ls_data-endda exp = lv_exp ).
 
     READ TABLE lt_data INTO ls_data INDEX 2.
-    cl_abap_unit_assert=>assert_equals( act = ls_data-begda exp = '20250310' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-endda exp = '20250312' ).
+    lv_exp = '20250310'.
+    cl_abap_unit_assert=>assert_equals( act = ls_data-begda exp = lv_exp ).
+    lv_exp = '20250312'.
+    cl_abap_unit_assert=>assert_equals( act = ls_data-endda exp = lv_exp ).
 
   ENDMETHOD.
 
@@ -76,17 +81,26 @@ CLASS ltcl_export IMPLEMENTATION.
     DATA ls_map LIKE LINE OF lt_map.
     DATA lt_anon TYPE HASHED TABLE OF pernr_d WITH UNIQUE KEY table_line.
     DATA lv_pernr TYPE pernr_d.
+    DATA lv_lines TYPE i.
 
     DO 200 TIMES.
       lv_pernr = sy-index.
       INSERT lv_pernr INTO TABLE lt_pernr.
     ENDDO.
 
-    lt_map = zcl_wb_it2001_export=>build_pernr_map(
-      it_pernr = lt_pernr
-      iv_seed  = 42 ).
+    zcl_wb_it2001_export=>build_pernr_map(
+      EXPORTING
+        it_pernr      = lt_pernr
+        iv_seed       = 42
+      RECEIVING
+        rt_map        = lt_map
+      EXCEPTIONS
+        random_failed = 1
+        OTHERS        = 2 ).
+    cl_abap_unit_assert=>assert_subrc( exp = 0 ).
 
-    cl_abap_unit_assert=>assert_equals( act = lines( lt_map ) exp = 200 ).
+    lv_lines = lines( lt_map ).
+    cl_abap_unit_assert=>assert_equals( act = lv_lines exp = 200 ).
 
     LOOP AT lt_map INTO ls_map.
       INSERT ls_map-pernr_anon INTO TABLE lt_anon.
@@ -108,12 +122,23 @@ CLASS ltcl_export IMPLEMENTATION.
     DATA ls_map LIKE LINE OF lt_map.
     DATA lt_data TYPE zcl_wb_it2001_export=>tt_p2001.
     DATA ls_data LIKE LINE OF lt_data.
+    DATA lv_pernr TYPE pernr_d.
 
-    INSERT '00001234' INTO TABLE lt_pernr.
-    lt_map = zcl_wb_it2001_export=>build_pernr_map(
-      it_pernr = lt_pernr
-      iv_seed  = 7 ).
+    lv_pernr = '00001234'.
+    INSERT lv_pernr INTO TABLE lt_pernr.
+
+    zcl_wb_it2001_export=>build_pernr_map(
+      EXPORTING
+        it_pernr      = lt_pernr
+        iv_seed       = 7
+      RECEIVING
+        rt_map        = lt_map
+      EXCEPTIONS
+        random_failed = 1
+        OTHERS        = 2 ).
+    cl_abap_unit_assert=>assert_subrc( exp = 0 ).
     READ TABLE lt_map INTO ls_map INDEX 1.
+    cl_abap_unit_assert=>assert_subrc( exp = 0 ).
 
     ls_data-pernr = '00001234'.
     APPEND ls_data TO lt_data.
@@ -139,20 +164,24 @@ CLASS ltcl_export IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD begda_after_endda.
+  METHOD wrong_period.
 
     DATA lt_range TYPE zcl_wb_it2001_export=>tt_pernr_range.
     DATA lo_export TYPE REF TO zcl_wb_it2001_export.
 
-    TRY.
-        CREATE OBJECT lo_export
-          EXPORTING
-            it_pernr = lt_range
-            iv_begda = '20250201'
-            iv_endda = '20250101'.
-        cl_abap_unit_assert=>fail( 'Oczekiwano wyjątku' ).
-      CATCH zcx_wb_it2001_export ##NO_HANDLER.
-    ENDTRY.
+    CREATE OBJECT lo_export
+      EXPORTING
+        it_pernr = lt_range
+        iv_begda = '20250201'
+        iv_endda = '20250101'.
+
+    lo_export->execute(
+      EXCEPTIONS
+        wrong_period  = 1
+        no_data       = 2
+        random_failed = 3
+        OTHERS        = 4 ).
+    cl_abap_unit_assert=>assert_subrc( exp = 1 ).
 
   ENDMETHOD.
 

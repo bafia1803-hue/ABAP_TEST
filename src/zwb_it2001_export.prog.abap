@@ -38,30 +38,51 @@ START-OF-SELECTION.
   PERFORM main.
 
 
+*&---------------------------------------------------------------------*
+*& Form main
+*&---------------------------------------------------------------------*
 FORM main.
 
   DATA lo_export TYPE REF TO zcl_wb_it2001_export.
-  DATA lx_error TYPE REF TO zcx_wb_it2001_export.
   DATA lt_map TYPE zcl_wb_it2001_export=>tt_pernr_map.
   DATA ls_map LIKE LINE OF lt_map.
   DATA lt_output TYPE tt_output.
   DATA ls_output TYPE ty_output.
   DATA lv_fullpath TYPE string.
 
-  TRY.
-      CREATE OBJECT lo_export
-        EXPORTING
-          it_pernr = s_pernr[]
-          iv_begda = p_begda
-          iv_endda = p_endda.
+  CREATE OBJECT lo_export
+    EXPORTING
+      it_pernr = s_pernr[]
+      iv_begda = p_begda
+      iv_endda = p_endda.
 
-      lo_export->execute( ).
-      lv_fullpath = lo_export->download( ).
+  lo_export->execute(
+    EXCEPTIONS
+      wrong_period  = 1
+      no_data       = 2
+      random_failed = 3
+      OTHERS        = 4 ).
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno
+      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
+      DISPLAY LIKE 'E'.
+    RETURN.
+  ENDIF.
 
-    CATCH zcx_wb_it2001_export INTO lx_error.
-      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
-      RETURN.
-  ENDTRY.
+  lo_export->download(
+    RECEIVING
+      rv_fullpath     = lv_fullpath
+    EXCEPTIONS
+      no_gui          = 1
+      dialog_failed   = 2
+      download_failed = 3
+      OTHERS          = 4 ).
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno
+      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
+      DISPLAY LIKE 'E'.
+    RETURN.
+  ENDIF.
 
   IF lv_fullpath IS INITIAL.
     MESSAGE s008(zwb_it2001) DISPLAY LIKE 'W'.

@@ -24,19 +24,19 @@
      <ID>S</ID>
      <KEY>P_BEGDA</KEY>
      <ENTRY>        Data od</ENTRY>
-     <LENGTH>15</LENGTH>
+     <LENGTH>23</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_ENDDA</KEY>
      <ENTRY>        Data do</ENTRY>
-     <LENGTH>15</LENGTH>
+     <LENGTH>23</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_PERNR</KEY>
      <ENTRY>        Numer osobowy</ENTRY>
-     <LENGTH>21</LENGTH>
+     <LENGTH>29</LENGTH>
     </item>
    </TPOOL>
   </asx:values>

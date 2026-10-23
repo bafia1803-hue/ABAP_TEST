@@ -1,7 +1,9 @@
-"! <p class="shorttext synchronized">Eksport IT2001 do JSON z anonimizacją numerów osobowych</p>
+"! Eksport IT2001 do JSON z anonimizacją numerów osobowych.
 "! Odczytuje rekordy infotypu 2001 (PA2001), które nachodzą na podany okres,
 "! przycina ich daty do tego okresu, zastępuje PERNR losowymi, unikalnymi
 "! numerami zastępczymi, serializuje wynik do JSON i zapisuje plik na PC.
+"! Błędy są zgłaszane klasycznymi wyjątkami z komunikatem z klasy ZWB_IT2001
+"! (pola SY-MSGID, SY-MSGNO, SY-MSGV1 są ustawione po wyjątku).
 CLASS zcl_wb_it2001_export DEFINITION
   PUBLIC
   FINAL
@@ -22,20 +24,18 @@ CLASS zcl_wb_it2001_export DEFINITION
     "! @parameter it_pernr | Zakres numerów osobowych (pusty = wszyscy)
     "! @parameter iv_begda | Początek okresu
     "! @parameter iv_endda | Koniec okresu
-    "! @raising zcx_wb_it2001_export | Data początkowa jest późniejsza niż końcowa
     METHODS constructor
       IMPORTING
         it_pernr TYPE tt_pernr_range
         iv_begda TYPE begda
-        iv_endda TYPE endda
-      RAISING
-        zcx_wb_it2001_export.
+        iv_endda TYPE endda.
 
     "! Odczyt, przycięcie dat i anonimizacja
-    "! @raising zcx_wb_it2001_export | Brak danych lub błąd losowania
     METHODS execute
-      RAISING
-        zcx_wb_it2001_export.
+      EXCEPTIONS
+        wrong_period
+        no_data
+        random_failed.
 
     "! Dane po anonimizacji (PERNR zastąpiony)
     METHODS get_data
@@ -55,14 +55,15 @@ CLASS zcl_wb_it2001_export DEFINITION
     "! Okno wyboru pliku i zapis JSON na komputerze użytkownika
     "! @parameter iv_default_name | Proponowana nazwa pliku
     "! @parameter rv_fullpath | Ścieżka zapisanego pliku; pusta, gdy użytkownik anulował
-    "! @raising zcx_wb_it2001_export | Tryb tła lub błąd zapisu
     METHODS download
       IMPORTING
         iv_default_name    TYPE string OPTIONAL
       RETURNING
         VALUE(rv_fullpath) TYPE string
-      RAISING
-        zcx_wb_it2001_export.
+      EXCEPTIONS
+        no_gui
+        dialog_failed
+        download_failed.
 
     "! Usuwa wiersze spoza okresu i przycina BEGDA/ENDDA do okresu
     CLASS-METHODS clip_dates
@@ -73,15 +74,14 @@ CLASS zcl_wb_it2001_export DEFINITION
         ct_data  TYPE tt_p2001.
 
     "! Losuje unikalne numery zastępcze (różne od siebie i od numerów prawdziwych)
-    "! @raising zcx_wb_it2001_export | Nie udało się wylosować unikalnego numeru
     CLASS-METHODS build_pernr_map
       IMPORTING
         it_pernr      TYPE tt_pernr
         iv_seed       TYPE i
       RETURNING
         VALUE(rt_map) TYPE tt_pernr_map
-      RAISING
-        zcx_wb_it2001_export.
+      EXCEPTIONS
+        random_failed.
 
     "! Podmienia PERNR w danych wg mapowania
     CLASS-METHODS apply_pernr_map
@@ -115,12 +115,6 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
 
   METHOD constructor.
 
-    IF iv_begda > iv_endda.
-      RAISE EXCEPTION TYPE zcx_wb_it2001_export
-        EXPORTING
-          textid = zcx_wb_it2001_export=>begda_after_endda.
-    ENDIF.
-
     mt_pernr = it_pernr.
     mv_begda = iv_begda.
     mv_endda = iv_endda.
@@ -137,11 +131,13 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
 
     CLEAR: mt_data, mt_map.
 
+    IF mv_begda > mv_endda.
+      MESSAGE e001(zwb_it2001) RAISING wrong_period.
+    ENDIF.
+
     mt_data = read_data( ).
     IF mt_data IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_wb_it2001_export
-        EXPORTING
-          textid = zcx_wb_it2001_export=>no_data.
+      MESSAGE e002(zwb_it2001) RAISING no_data.
     ENDIF.
 
     clip_dates(
@@ -159,9 +155,19 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
     GET TIME STAMP FIELD lv_timestamp.
     lv_seed = frac( lv_timestamp ) * 10000000.
 
-    mt_map = build_pernr_map(
-      it_pernr = lt_pernr
-      iv_seed  = lv_seed ).
+    build_pernr_map(
+      EXPORTING
+        it_pernr      = lt_pernr
+        iv_seed       = lv_seed
+      RECEIVING
+        rt_map        = mt_map
+      EXCEPTIONS
+        random_failed = 1
+        OTHERS        = 2 ).
+    IF sy-subrc <> 0.
+      CLEAR mt_data.
+      MESSAGE e003(zwb_it2001) RAISING random_failed.
+    ENDIF.
 
     apply_pernr_map(
       EXPORTING
@@ -221,21 +227,17 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
     DATA lv_anon TYPE pernr_d.
     DATA lv_attempt TYPE i.
     DATA ls_map TYPE ty_pernr_map.
-    DATA lx_random TYPE REF TO cx_abap_random.
 
     TRY.
         lo_random = cl_abap_random_int=>create(
           seed = iv_seed
           min  = 1
           max  = c_max_pernr ).
-      CATCH cx_abap_random INTO lx_random.
-        RAISE EXCEPTION TYPE zcx_wb_it2001_export
-          EXPORTING
-            textid   = zcx_wb_it2001_export=>random_failed
-            previous = lx_random.
+      CATCH cx_abap_random.
+        MESSAGE e003(zwb_it2001) RAISING random_failed.
     ENDTRY.
 
-    " Numery prawdziwe są od razu "zajęte", żeby żaden zastępczy nie trafił na istniejącą osobę z eksportu
+    " Numery prawdziwe są od razu "zajęte", żeby żaden zastępczy nie trafił na osobę z eksportu
     INSERT LINES OF it_pernr INTO TABLE lt_used.
 
     LOOP AT it_pernr INTO lv_real.
@@ -243,9 +245,8 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
       DO.
         lv_attempt = lv_attempt + 1.
         IF lv_attempt > c_max_attempts.
-          RAISE EXCEPTION TYPE zcx_wb_it2001_export
-            EXPORTING
-              textid = zcx_wb_it2001_export=>random_failed.
+          CLEAR rt_map.
+          MESSAGE e003(zwb_it2001) RAISING random_failed.
         ENDIF.
 
         lv_anon = lo_random->get_next( ).
@@ -305,18 +306,16 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
     DATA lv_fullpath TYPE string.
     DATA lv_action TYPE i.
     DATA lt_solix TYPE solix_tab.
-    DATA lv_msgv1 TYPE symsgv.
+    DATA lv_size TYPE i.
 
     IF sy-batch = abap_true.
-      RAISE EXCEPTION TYPE zcx_wb_it2001_export
-        EXPORTING
-          textid = zcx_wb_it2001_export=>no_gui.
+      MESSAGE e006(zwb_it2001) RAISING no_gui.
     ENDIF.
 
     lv_json = serialize_json( ).
 
     IF iv_default_name IS INITIAL.
-      lv_default_name = |IT2001_{ mv_begda }_{ mv_endda }.json|.
+      CONCATENATE 'IT2001_' mv_begda '_' mv_endda '.json' INTO lv_default_name.
     ELSE.
       lv_default_name = iv_default_name.
     ENDIF.
@@ -334,9 +333,7 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1 ).
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_wb_it2001_export
-        EXPORTING
-          textid = zcx_wb_it2001_export=>file_dialog_failed.
+      MESSAGE e004(zwb_it2001) RAISING dialog_failed.
     ENDIF.
 
     IF lv_action <> cl_gui_frontend_services=>action_ok OR lv_fullpath IS INITIAL.
@@ -344,10 +341,11 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
     ENDIF.
 
     lt_solix = cl_bcs_convert=>xstring_to_solix( iv_xstring = lv_json ).
+    lv_size = xstrlen( lv_json ).
 
     cl_gui_frontend_services=>gui_download(
       EXPORTING
-        bin_filesize = xstrlen( lv_json )
+        bin_filesize = lv_size
         filename     = lv_fullpath
         filetype     = 'BIN'
       CHANGING
@@ -355,11 +353,7 @@ CLASS zcl_wb_it2001_export IMPLEMENTATION.
       EXCEPTIONS
         OTHERS       = 1 ).
     IF sy-subrc <> 0.
-      lv_msgv1 = lv_fullpath.
-      RAISE EXCEPTION TYPE zcx_wb_it2001_export
-        EXPORTING
-          textid = zcx_wb_it2001_export=>download_failed
-          msgv1  = lv_msgv1.
+      MESSAGE e005(zwb_it2001) WITH lv_fullpath RAISING download_failed.
     ENDIF.
 
     rv_fullpath = lv_fullpath.

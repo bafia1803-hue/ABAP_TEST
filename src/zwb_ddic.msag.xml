@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZWB_DDIC</ARBGB>
+    <MASTERLANG>L</MASTERLANG>
+    <STEXT>Opis słownika DDIC dla AI</STEXT>
+   </T100A>
+   <T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>Podaj nazwy obiektów lub pakiety</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Zaznacz co najmniej jeden typ obiektów lub infotypy</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>Nie znaleziono obiektów dla podanych kryteriów</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>Błąd okna wyboru pliku</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Błąd zapisu pliku &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>Zapis pliku nie jest możliwy w trybie tła</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>Plik zapisany: &amp;1 (obiektów: &amp;2)</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>L</SPRSL>
+     <ARBGB>ZWB_DDIC</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>Zapis pliku anulowany przez użytkownika</TEXT>
+    </T100>
+   </T100>
+  </asx:values>
+ </asx:abap>
+</abapGit>

@@ -1517,3 +1517,21 @@ html.zwbRczDark .zwbTl,
 .zwbRczChip {
     transition: background-color 200ms ease, color 200ms ease;
 }
+
+/* Zmiana trybu jasny / ciemny: "bąbel" rysowany przez ThemeSwitch.js (View Transitions API).
+   Wyłączamy domyślne przenikanie - widać tylko rozlewające się koło. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+    z-index: 2;
+}
+
+html.zwbRczThemeSwitching *,
+html.zwbRczThemeSwitching *::before,
+html.zwbRczThemeSwitching *::after {
+    transition: none !important;
+}

@@ -41,6 +41,35 @@ sap.ui.define([
 
     Theming.attachApplied(refresh);
 
+    // Miejsce ostatniego kliknięcia - środek "bąbla" przy zmianie trybu
+    var lastPointer = null;
+    document.addEventListener("pointerdown", function (event) {
+        lastPointer = { x: event.clientX, y: event.clientY };
+    }, true);
+
+    // Zmiana motywu; obietnica kończy się, gdy nowy motyw jest załadowany (najwyżej 3 s)
+    function applyMode(mode) {
+        return new Promise(function (resolve) {
+            var done = false;
+            function finish() {
+                if (!done) {
+                    done = true;
+                    Theming.detachApplied(finish);
+                    refresh();
+                    resolve();
+                }
+            }
+            document.documentElement.classList.toggle("zwbRczDark", mode === "dark");
+            if (Theming.getTheme() === THEMES[mode]) {
+                finish();
+                return;
+            }
+            Theming.attachApplied(finish);
+            Theming.setTheme(THEMES[mode]);
+            setTimeout(finish, 3000);
+        });
+    }
+
     return {
         // Teksty przycisku z i18n (wywołuje kontroler strony)
         setTexts: function (darkText, lightText) {
@@ -58,6 +87,7 @@ sap.ui.define([
 
         isDark: isDark,
 
+        // Przełączenie z animacją "bąbla": nowy tryb rozlewa się kołem od miejsca kliknięcia
         toggle: function () {
             var mode = isDark() ? "light" : "dark";
             try {
@@ -65,8 +95,42 @@ sap.ui.define([
             } catch (error) {
                 // przeglądarka bez localStorage - wybór działa do zamknięcia okna
             }
-            document.documentElement.classList.toggle("zwbRczDark", mode === "dark");
-            Theming.setTheme(THEMES[mode]);
+
+            var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (!document.startViewTransition || reduceMotion) {
+                applyMode(mode);
+                return;
+            }
+
+            var x = lastPointer ? lastPointer.x : window.innerWidth - 40;
+            var y = lastPointer ? lastPointer.y : 40;
+            var radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+
+            // Na czas zmiany bez przejść CSS - w bąblu od razu gotowe kolory nowego trybu
+            var root = document.documentElement;
+            root.classList.add("zwbRczThemeSwitching");
+            var transition = document.startViewTransition(function () {
+                return applyMode(mode);
+            });
+            transition.finished.then(function () {
+                root.classList.remove("zwbRczThemeSwitching");
+            }, function () {
+                root.classList.remove("zwbRczThemeSwitching");
+            });
+            transition.ready.then(function () {
+                document.documentElement.animate({
+                    clipPath: [
+                        "circle(0px at " + x + "px " + y + "px)",
+                        "circle(" + radius + "px at " + x + "px " + y + "px)"
+                    ]
+                }, {
+                    duration: 700,
+                    easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+                    pseudoElement: "::view-transition-new(root)"
+                });
+            }).catch(function () {
+                // animacja się nie udała - tryb i tak jest przełączony
+            });
         }
     };
 });

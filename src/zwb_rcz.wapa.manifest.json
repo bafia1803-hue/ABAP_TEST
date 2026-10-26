@@ -1,0 +1,145 @@
+{
+    "_version": "1.59.0",
+    "sap.app": {
+        "id": "zwb.rcz",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "dataSources": {
+            "mainService": {
+                "uri": "/sap/opu/odata4/sap/zui_wb_rcz_day_o4/srvd/sap/zui_wb_rcz_day/0001/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": false,
+        "dependencies": {
+            "minUI5Version": "1.108.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.fe.templates": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "zwb.rcz.i18n.i18n"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            }
+        },
+        "routing": {
+            "config": {},
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "TimeResultDayList",
+                    "target": "TimeResultDayList"
+                },
+                {
+                    "pattern": "TimeResultDay({key}):?query:",
+                    "name": "TimeResultDayObjectPage",
+                    "target": "TimeResultDayObjectPage"
+                }
+            ],
+            "targets": {
+                "TimeResultDayList": {
+                    "type": "Component",
+                    "id": "TimeResultDayList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/TimeResultDay",
+                            "variantManagement": "Page",
+                            "initialLoad": "Disabled",
+                            "navigation": {
+                                "TimeResultDay": {
+                                    "detail": {
+                                        "route": "TimeResultDayObjectPage"
+                                    }
+                                }
+                            },
+                            "controlConfiguration": {
+                                "@com.sap.vocabularies.UI.v1.LineItem": {
+                                    "tableSettings": {
+                                        "type": "GridTable",
+                                        "selectionMode": "None",
+                                        "rowCountMode": "Auto",
+                                        "condensedTableLayout": true,
+                                        "enableExport": true,
+                                        "personalization": {
+                                            "column": true,
+                                            "sort": true,
+                                            "filter": false
+                                        }
+                                    },
+                                    "actions": {
+                                        "hideEmptyColumns": {
+                                            "press": "zwb.rcz.ext.ColumnVisibility.hideEmptyColumns",
+                                            "text": "{i18n>hideEmptyColumns}",
+                                            "enabled": true,
+                                            "visible": true,
+                                            "requiresSelection": false
+                                        },
+                                        "showAllColumns": {
+                                            "press": "zwb.rcz.ext.ColumnVisibility.showAllColumns",
+                                            "text": "{i18n>showAllColumns}",
+                                            "enabled": true,
+                                            "visible": true,
+                                            "requiresSelection": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "TimeResultDayObjectPage": {
+                    "type": "Component",
+                    "id": "TimeResultDayObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/TimeResultDay"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": [],
+        "archeType": "transactional"
+    }
+}

@@ -4,29 +4,17 @@
     xmlns="sap.m"
     xmlns:unified="sap.ui.unified">
     <!-- Oś czasu jednego dnia: wiersz = niepusty rodzaj czasu, pasek = wycinek GODZOD - GODZDO.
-         Strzałki kalendarza przełączają dzień (onStartDateChange). -->
+         Strzałki kalendarza przełączają dzień (onStartDateChange) - przeładowuje się tylko kalendarz. -->
     <Page
         id="dayTimelinePage"
         title="{timeline>/title}"
         showNavButton="true"
-        navButtonPress=".onNavBack"
-        busy="{timeline>/busy}"
-        busyIndicatorDelay="0">
+        navButtonPress=".onNavBack">
         <content>
-            <MessageStrip
-                text="{timeline>/focusText}"
-                visible="{= !!${timeline>/focusText} }"
-                type="Information"
-                showIcon="true"
-                class="sapUiSmallMargin" />
-            <MessageStrip
-                text="{i18n>timelineNoData}"
-                visible="{= !${timeline>/busy} &amp;&amp; ${timeline>/rows}.length === 0 }"
-                type="Warning"
-                showIcon="true"
-                class="sapUiSmallMargin" />
             <PlanningCalendar
                 id="dayTimeline"
+                busy="{timeline>/busy}"
+                busyIndicatorDelay="200"
                 startDate="{timeline>/startDate}"
                 viewKey="DayHours"
                 rows="{path: 'timeline>/rows', templateShareable: false}"

@@ -58,7 +58,7 @@ sap.ui.define([
             if (PageController.prototype.onInit) {
                 PageController.prototype.onInit.apply(this, arguments);
             }
-            this.getView().setModel(new JSONModel({ busy: false, rows: [], title: "", focusText: "" }), "timeline");
+            this.getView().setModel(new JSONModel({ busy: false, rows: [], title: "" }), "timeline");
 
             var router = this.getAppComponent().getRouter();
             router.getRoute(DAY_ROUTE).attachPatternMatched(this._onDayMatched, this);
@@ -79,7 +79,8 @@ sap.ui.define([
             }
         },
 
-        // Strzałki / "Dzisiaj" w kalendarzu: inny dzień -> wczytanie jego osi czasu
+        // Strzałki / "Dzisiaj" w kalendarzu: inny dzień -> wczytanie tylko jego osi czasu
+        // (bez zmiany adresu strony, więc nie przeładowuje się cała strona)
         onStartDateChange: function (event) {
             var current = this._current;
             if (!current) {
@@ -95,13 +96,7 @@ sap.ui.define([
             var fpper = current.key.Fpper === toMonthPeriod(current.key.Datcz)
                 ? toMonthPeriod(newDay)
                 : current.key.Fpper;
-            var parameters = {
-                key: "Pernr='" + current.key.Pernr + "',Fpper='" + fpper + "',Datcz=" + newDay
-            };
-            if (current.focus) {
-                parameters["?query"] = { focus: current.focus };
-            }
-            this.getAppComponent().getRouter().navTo(DAY_ROUTE, parameters, true);
+            this._loadDay({ Pernr: current.key.Pernr, Fpper: fpper, Datcz: newDay }, current.focus);
         },
 
         _onDayMatched: function (event) {
@@ -111,22 +106,29 @@ sap.ui.define([
         _showDay: function (routeArguments) {
             var key = parseKey(routeArguments && routeArguments.key);
             var query = (routeArguments && routeArguments["?query"]) || {};
-            var focus = query.focus || "";
-            var timeline = this.getView().getModel("timeline");
-            this._current = { key: key, focus: focus };
 
             if (!key.Pernr || !key.Fpper || !key.Datcz) {
-                timeline.setData({ busy: false, rows: [], title: "", focusText: "" });
+                this.getView().getModel("timeline").setData({ busy: false, rows: [], title: "" });
                 return;
             }
+            this._loadDay(key, query.focus || "");
+        },
+
+        // Wczytuje oś czasu dnia; dotychczasowe wiersze zostają widoczne do czasu wczytania nowych
+        _loadDay: function (key, focus) {
+            var timeline = this.getView().getModel("timeline");
+            var request = {};
+            this._current = { key: key, focus: focus, request: request };
 
             timeline.setProperty("/busy", true);
             timeline.setProperty("/title", this._getText("timelineTitle", [this._formatDay(key.Datcz), key.Pernr]));
-            timeline.setProperty("/focusText", "");
 
             this._readSlices(key)
                 .then(function (slices) {
-                    this._fillTimeline(key.Datcz, slices, focus);
+                    // Wynik starszego żądania (szybkie klikanie strzałek) jest pomijany
+                    if (this._current.request === request) {
+                        this._fillTimeline(key.Datcz, slices, focus);
+                    }
                 }.bind(this))
                 .catch(function (error) {
                     // eslint-disable-next-line no-console
@@ -134,8 +136,10 @@ sap.ui.define([
                     timeline.setProperty("/rows", []);
                 })
                 .finally(function () {
-                    timeline.setProperty("/busy", false);
-                });
+                    if (this._current.request === request) {
+                        timeline.setProperty("/busy", false);
+                    }
+                }.bind(this));
         },
 
         _readSlices: function (key) {
@@ -157,7 +161,6 @@ sap.ui.define([
             var rowsByTimeType = {};
             var rows = [];
             var firstMinute = null;
-            var focusedNames = [];
 
             slices.forEach(function (slice) {
                 var row = rowsByTimeType[slice.Rodcz];
@@ -172,9 +175,6 @@ sap.ui.define([
                     };
                     rowsByTimeType[slice.Rodcz] = row;
                     rows.push(row);
-                    if (focused) {
-                        focusedNames.push(row.title);
-                    }
                 }
                 if (slice.SliceNo > 0) {
                     var period = slice.BeginTime + " - " + slice.EndTime;
@@ -209,9 +209,6 @@ sap.ui.define([
             var startHour = firstMinute === null ? 0 : Math.max(0, Math.floor(firstMinute / 60) - 1);
             timeline.setProperty("/startDate", toDate(isoDay, startHour * 60));
             timeline.setProperty("/rows", rows);
-            timeline.setProperty("/focusText", focus
-                ? this._getText(focusedNames.length ? "timelineFocus" : "timelineFocusNone", [focusedNames.join(", ")])
-                : "");
         },
 
         _formatDay: function (isoDay) {

@@ -560,6 +560,8 @@ html.zwbRczDark .zwbRczPanel {
     z-index: 1000;
     font-family: var(--sapFontFamily, "72", Arial, sans-serif);
     color: var(--sapTextColor, #1d2d3e);
+    /* okienko jest dzieckiem <body>: index.html daje "body > div" wysokość 100% */
+    height: auto !important;
     min-width: 11rem;
     max-width: 18rem;
     padding: 0.75rem 1rem;

@@ -1,0 +1,22 @@
+<mvc:View
+    controllerName="zwb.rcz.ext.view.Messages"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:zwb="zwb.rcz.ext.control">
+    <!-- Wszystkie komunikaty pracownika w okresie (ext/control/MessageBoard.js) -->
+    <Page
+        id="messagesPage"
+        title="{i18n>msgPageTitle}"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+        <content>
+            <zwb:MessageBoard
+                id="messageBoard"
+                allText="{i18n>msgFilterAll}"
+                errorsText="{i18n>msgErrors}"
+                warningsText="{i18n>msgWarnings}"
+                infosText="{i18n>msgInfos}"
+                emptyText="{i18n>msgNone}" />
+        </content>
+    </Page>
+</mvc:View>

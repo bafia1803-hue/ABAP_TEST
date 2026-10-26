@@ -70,6 +70,11 @@
                     "pattern": "TimeResultDay({key}):?query:",
                     "name": "TimeResultDayObjectPage",
                     "target": "TimeResultDayObjectPage"
+                },
+                {
+                    "pattern": "Messages/{pernr}/{fpper}",
+                    "name": "Messages",
+                    "target": "Messages"
                 }
             ],
             "targets": {
@@ -104,18 +109,30 @@
                                             "press": ".extension.zwb.rcz.ext.ListReportExt.hideEmptyColumns",
                                             "text": "{i18n>hideEmptyColumns}",
                                             "enabled": true,
-                                            "visible": true,
                                             "requiresSelection": false
                                         },
                                         "showAllColumns": {
                                             "press": ".extension.zwb.rcz.ext.ListReportExt.showAllColumns",
                                             "text": "{i18n>showAllColumns}",
                                             "enabled": true,
-                                            "visible": true,
                                             "requiresSelection": false
                                         }
                                     },
                                     "columns": {
+                                        "MsgCell": {
+                                            "header": "{i18n>colMessages}",
+                                            "template": "zwb.rcz.ext.fragment.MessageCell",
+                                            "width": "6rem",
+                                            "horizontalAlign": "Begin",
+                                            "properties": [
+                                                "ErrorCount",
+                                                "WarningCount"
+                                            ],
+                                            "position": {
+                                                "anchor": "DateCell",
+                                                "placement": "Before"
+                                            }
+                                        },
                                         "DateCell": {
                                             "header": "{i18n>colDate}",
                                             "template": "zwb.rcz.ext.fragment.DateCell",
@@ -222,6 +239,16 @@
                                         }
                                     }
                                 }
+                            },
+                            "content": {
+                                "header": {
+                                    "actions": {
+                                        "zwbMessages": {
+                                            "press": ".extension.zwb.rcz.ext.ListReportExt.openAllMessages",
+                                            "text": "{i18n>messagesButton}"
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -234,6 +261,17 @@
                         "settings": {
                             "viewName": "zwb.rcz.ext.view.DayTimeline",
                             "contextPath": "/TimeResultDay"
+                        }
+                    }
+                },
+                "Messages": {
+                    "type": "Component",
+                    "id": "Messages",
+                    "name": "sap.fe.core.fpm",
+                    "options": {
+                        "settings": {
+                            "viewName": "zwb.rcz.ext.view.Messages",
+                            "contextPath": "/TimeMessage"
                         }
                     }
                 }

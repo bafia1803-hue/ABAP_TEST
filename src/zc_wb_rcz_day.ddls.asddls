@@ -68,6 +68,14 @@ define custom entity ZC_WB_RCZ_DAY
       @UI.hidden: true
       WeekendType : abap.char( 3 );
 
+      // Komunikaty dnia z /QUERC/RCZ_KOMP (kolumna ikon w tabeli)
+      @EndUserText.label: 'Błędy'
+      @UI.hidden: true
+      ErrorCount : abap.int4;
+      @EndUserText.label: 'Ostrzeżenia'
+      @UI.hidden: true
+      WarningCount : abap.int4;
+
       @EndUserText.label: 'Plan'
       @UI: { lineItem: [{ position: 20, importance: #HIGH }],
              fieldGroup: [{ qualifier: 'Work', position: 10 }] }

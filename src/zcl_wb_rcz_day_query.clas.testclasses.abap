@@ -10,6 +10,7 @@ CLASS ltcl_rcz_day DEFINITION FINAL FOR TESTING
     METHODS unknown_time_type_is_ignored FOR TESTING.
     METHODS all_days_of_period FOR TESTING.
     METHODS day_of_week FOR TESTING.
+    METHODS message_counts FOR TESTING.
 
 ENDCLASS.
 
@@ -109,6 +110,27 @@ CLASS ltcl_rcz_day IMPLEMENTATION.
     zcl_wb_rcz_day_query=>set_day_of_week( CHANGING cs_day = ls_day ).
     cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-dayofweek ) exp = `wtorek` ).
     cl_abap_unit_assert=>assert_initial( ls_day-weekendtype ).
+
+  ENDMETHOD.
+
+  METHOD message_counts.
+
+    DATA(lt_days) = VALUE zcl_wb_rcz_day_query=>tt_days(
+      ( pernr = '00000011' fpper = '202609' datcz = '20260902' )
+      ( pernr = '00000011' fpper = '202609' datcz = '20260903' ) ).
+
+    zcl_wb_rcz_day_query=>apply_message_counts(
+      EXPORTING
+        it_counts = VALUE #( ( dakom = '20260902' tykom = 'E' msg_count = 2 )
+                             ( dakom = '20260902' tykom = 'W' msg_count = 3 )
+                             ( dakom = '20260903' tykom = 'W' msg_count = 1 ) )
+      CHANGING
+        ct_days   = lt_days ).
+
+    cl_abap_unit_assert=>assert_equals( act = lt_days[ datcz = '20260902' ]-errorcount exp = 2 ).
+    cl_abap_unit_assert=>assert_equals( act = lt_days[ datcz = '20260902' ]-warningcount exp = 3 ).
+    cl_abap_unit_assert=>assert_equals( act = lt_days[ datcz = '20260903' ]-errorcount exp = 0 ).
+    cl_abap_unit_assert=>assert_equals( act = lt_days[ datcz = '20260903' ]-warningcount exp = 1 ).
 
   ENDMETHOD.
 

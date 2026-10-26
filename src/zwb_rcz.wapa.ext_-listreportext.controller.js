@@ -6,9 +6,11 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "zwb/rcz/ext/MonthTotals",
     "zwb/rcz/ext/RangeSelection",
-    "zwb/rcz/ext/SelectionReport"
+    "zwb/rcz/ext/SelectionReport",
+    "zwb/rcz/ext/MessagePanel",
+    "sap/ui/core/format/DateFormat"
 ], function (ControllerExtension, Element, MessageToast, Filter, FilterOperator,
-             MonthTotals, RangeSelection, SelectionReport) {
+             MonthTotals, RangeSelection, SelectionReport, MessagePanel, DateFormat) {
     "use strict";
 
     // Rozszerzenie strony listy dni (manifest.json -> sap.ui5/extends).
@@ -19,13 +21,19 @@ sap.ui.define([
     // 3. Wiersz "Suma miesiąca" pod tabelą (MonthTotals).
     // 4. Zaznaczanie obszaru przeciągnięciem myszą i karta "Raport zaznaczenia" (RangeSelection,
     //    SelectionReport). Przeciągnięcie nie otwiera osi czasu.
+    // 5. Komunikaty: kolumna ikon (błędy / ostrzeżenia dnia), panel komunikatów dnia od dołu
+    //    po kliknięciu w tę kolumnę, przycisk "Komunikaty" (ekran wszystkich komunikatów okresu).
 
     var TABLE_ID = "fe::table::TimeResultDay::LineItem";
     var ENTITY_SET = "/TimeResultDay";
     var DAY_ROUTE = "TimeResultDayObjectPage";
     var KEY_FIELDS = ["Pernr", "Fpper", "Datcz"];
     // Kolumny, które nie są godzinami (nie ukrywamy ich i nie wyróżniamy po dwukliku)
-    var NON_TIME_COLUMNS = KEY_FIELDS.concat(["DateCell", "WeekdayCell", "DayOfWeek", "WeekendType"]);
+    var NON_TIME_COLUMNS = KEY_FIELDS.concat(["DateCell", "WeekdayCell", "DayOfWeek", "WeekendType",
+        "MsgCell", "ErrorCount", "WarningCount"]);
+    var MESSAGE_COLUMN = "MsgCell";
+    var MESSAGES_ROUTE = "Messages";
+    var MESSAGE_SET = "/TimeMessage";
     var EMPTY_VALUES = ["", "00:00"];
     // Czas na drugie kliknięcie: dopiero po nim wiadomo, czy to dwuklik
     var DOUBLE_CLICK_MS = 400;
@@ -85,6 +93,7 @@ sap.ui.define([
                 // Błąd w obsłudze dwukliku nie może zablokować strony
                 try {
                     this._attachCellEvents();
+                    this._updateColumnButtons();
                 } catch (error) {
                     // eslint-disable-next-line no-console
                     console.error("[ZWB_RCZ] Obsługa dwukliku", error);
@@ -137,6 +146,7 @@ sap.ui.define([
                         table.removeColumn(column);
                     });
                     that._afterColumnsChanged();
+                    that._updateColumnButtons();
                     log("Ukryte kolumny", emptyColumns.map(getFieldName));
                     MessageToast.show(that._getText("columnsHidden", [emptyColumns.length]));
                 })
@@ -152,7 +162,81 @@ sap.ui.define([
             if (table) {
                 this._restoreColumns(table);
             }
+            this._updateColumnButtons();
             MessageToast.show(this._getText("columnsShown"));
+        },
+
+        // Widoczny jest tylko przycisk, który ma sens: "Ukryj puste kolumny" albo "Pokaż wszystkie kolumny"
+        _updateColumnButtons: function () {
+            var hidden = this._hiddenColumns.length > 0;
+            Element.registry.filter(function (element) {
+                return element.isA("sap.m.Button") && /CustomAction::(hideEmptyColumns|showAllColumns)$/.test(element.getId());
+            }).forEach(function (button) {
+                var isShowButton = /showAllColumns$/.test(button.getId());
+                button.setVisible(isShowButton ? hidden : !hidden);
+            });
+        },
+
+        // ------------------------------------------------------------------ komunikaty
+        // Przycisk "Komunikaty" na górze strony: ekran wszystkich komunikatów okresu
+        openAllMessages: function () {
+            var period = this._getCurrentPeriod();
+            if (!period) {
+                MessageToast.show(this._getText("noData"));
+                return;
+            }
+            this._closeMessagePanel();
+            this.base.getAppComponent().getRouter().navTo(MESSAGES_ROUTE, period);
+        },
+
+        // Numer osobowy i okres z wyświetlonych danych
+        _getCurrentPeriod: function () {
+            var contexts = this._getRowContexts(this._getTable());
+            var row = contexts.length && contexts[0].getObject();
+            return row ? { pernr: row.Pernr, fpper: row.Fpper } : null;
+        },
+
+        // "Wyświetl wszystkie" w panelu: ekran wszystkich komunikatów w nowym oknie przeglądarki
+        _openMessagesWindow: function () {
+            var period = this._getCurrentPeriod();
+            if (!period) {
+                return;
+            }
+            var hash = this.base.getAppComponent().getRouter().getURL(MESSAGES_ROUTE, period);
+            window.open(window.location.href.split("#")[0] + "#" + hash, "_blank");
+        },
+
+        _openMessagePanel: function (context) {
+            var day = context.getObject();
+            if (!day || !(day.ErrorCount > 0 || day.WarningCount > 0)) {
+                return;
+            }
+            if (!this._messagePanel) {
+                this._messagePanel = new MessagePanel({
+                    getText: this._getText.bind(this),
+                    onShowAll: this._openMessagesWindow.bind(this)
+                });
+            }
+            var parts = String(day.Datcz).split("-");
+            var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            var title = this._getText("msgPanelTitle",
+                [DateFormat.getDateInstance({ pattern: "EEEE, d MMMM yyyy" }).format(date)]);
+
+            var list = this._getTable().getModel().bindList(MESSAGE_SET, undefined, undefined, [
+                new Filter("Pernr", FilterOperator.EQ, day.Pernr),
+                new Filter("Dakom", FilterOperator.EQ, day.Datcz)
+            ]);
+            this._messagePanel.open(title, list.requestContexts(0, 1000).then(function (contexts) {
+                return contexts.map(function (item) {
+                    return item.getObject();
+                });
+            }));
+        },
+
+        _closeMessagePanel: function () {
+            if (this._messagePanel) {
+                this._messagePanel.close();
+            }
         },
 
         // ------------------------------------------------------------------ tabela i dane
@@ -268,6 +352,7 @@ sap.ui.define([
                     return;
                 }
                 innerTable.attachCellClick(that._onCellClick, that);
+                that._updateColumnButtons();
                 innerTable.attachBrowserEvent("dblclick", that._onDoubleClick, that);
                 that._attachSummaryFeatures(innerTable);
                 log("Obsługa dwukliku, sumy i zaznaczania włączona");
@@ -283,10 +368,21 @@ sap.ui.define([
                 columnId: event.getParameter("columnId"),
                 context: event.getParameter("rowBindingContext")
             };
+            // Kolumna komunikatów: panel komunikatów dnia zamiast osi czasu
+            var column = Element.registry.get(this._lastCell.columnId);
+            if (column && this._lastCell.context && this._columnInfo(column).field === MESSAGE_COLUMN) {
+                clearTimeout(this._pendingNavigation);
+                this._messageClickUntil = Date.now() + 800;
+                this._openMessagePanel(this._lastCell.context);
+            }
+        },
+
+        _isMessageClick: function () {
+            return Date.now() < (this._messageClickUntil || 0);
         },
 
         _onDoubleClick: function () {
-            if (!this._lastCell || !this._lastCell.context || this._isDragSelection()) {
+            if (!this._lastCell || !this._lastCell.context || this._isDragSelection() || this._isMessageClick()) {
                 return;
             }
             clearTimeout(this._pendingNavigation);
@@ -306,7 +402,7 @@ sap.ui.define([
             var that = this;
             clearTimeout(this._pendingNavigation);
             // Kliknięcie kończące zaznaczanie obszaru nie otwiera osi czasu
-            if (!context || this._isDragSelection()) {
+            if (!context || this._isDragSelection() || this._isMessageClick()) {
                 return;
             }
             this._pendingNavigation = setTimeout(function () {
@@ -319,6 +415,7 @@ sap.ui.define([
             if (this._selection) {
                 this._selection.clear();
             }
+            this._closeMessagePanel();
             var parameters = { key: getContextKey(context) };
             if (focusField) {
                 parameters["?query"] = { focus: focusField };

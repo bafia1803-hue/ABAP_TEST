@@ -40,6 +40,12 @@
    internal_rep_path = "ext/control/DayTimeline.js" />
 
   <MappingEntry
+   path              = "ext/control/MessageBoard.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/control/MessageBoard.js" />
+
+  <MappingEntry
    path              = "ext/fragment"
    is_folder         = "X"
    internal_rep      = ""
@@ -52,6 +58,12 @@
    internal_rep_path = "ext/fragment/DateCell.fragment.xml" />
 
   <MappingEntry
+   path              = "ext/fragment/MessageCell.fragment.xml"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/fragment/MessageCell.fragment.xml" />
+
+  <MappingEntry
    path              = "ext/fragment/WeekdayCell.fragment.xml"
    is_folder         = ""
    internal_rep      = "B"
@@ -62,6 +74,18 @@
    is_folder         = ""
    internal_rep      = "B"
    internal_rep_path = "ext/ListReportExt.controller.js" />
+
+  <MappingEntry
+   path              = "ext/MessageList.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/MessageList.js" />
+
+  <MappingEntry
+   path              = "ext/MessagePanel.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/MessagePanel.js" />
 
   <MappingEntry
    path              = "ext/MonthTotals.js"
@@ -104,6 +128,18 @@
    is_folder         = ""
    internal_rep      = "B"
    internal_rep_path = "ext/view/DayTimeline.view.xml" />
+
+  <MappingEntry
+   path              = "ext/view/Messages.controller.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/view/Messages.controller.js" />
+
+  <MappingEntry
+   path              = "ext/view/Messages.view.xml"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/view/Messages.view.xml" />
 
   <MappingEntry
    path              = "i18n"

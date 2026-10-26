@@ -1,0 +1,14 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <!-- Kolumna komunikatów dnia: czerwona ikona + liczba błędów, żółta ikona + liczba ostrzeżeń.
+         Kliknięcie otwiera panel komunikatów dnia (ext/ListReportExt.controller.js). -->
+    <HBox alignItems="Center" renderType="Bare" class="zwbRczMsgCell">
+        <HBox alignItems="Center" renderType="Bare" visible="{= ${ErrorCount} > 0 }" class="zwbRczMsgBadge is-error">
+            <core:Icon src="sap-icon://error" color="#d20a0a" size="0.875rem" />
+            <Text text="{ErrorCount}" class="zwbRczMsgCount" />
+        </HBox>
+        <HBox alignItems="Center" renderType="Bare" visible="{= ${WarningCount} > 0 }" class="zwbRczMsgBadge is-warning">
+            <core:Icon src="sap-icon://alert" color="#e2a100" size="0.875rem" />
+            <Text text="{WarningCount}" class="zwbRczMsgCount" />
+        </HBox>
+    </HBox>
+</core:FragmentDefinition>

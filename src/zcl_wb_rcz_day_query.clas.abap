@@ -24,6 +24,14 @@ CLASS zcl_wb_rcz_day_query DEFINITION
       END OF ty_time_record.
     TYPES tt_time_records TYPE STANDARD TABLE OF ty_time_record WITH EMPTY KEY.
     TYPES tt_datcz_range TYPE RANGE OF /querc/rcz_e_datcz.
+    TYPES:
+      " Liczba komunikatów jednego typu (E / W) w jednym dniu
+      BEGIN OF ty_message_count,
+        dakom TYPE /querc/rcz_e_dakom,
+        tykom TYPE /querc/rcz_e_tykom,
+        msg_count TYPE i,
+      END OF ty_message_count.
+    TYPES tt_message_counts TYPE STANDARD TABLE OF ty_message_count WITH EMPTY KEY.
 
     CLASS-METHODS class_constructor.
 
@@ -51,6 +59,13 @@ CLASS zcl_wb_rcz_day_query DEFINITION
         it_datcz TYPE tt_datcz_range
       CHANGING
         ct_days  TYPE tt_days.
+
+    "! Liczby błędów (E) i ostrzeżeń (W) z /QUERC/RCZ_KOMP w wierszach dni
+    CLASS-METHODS apply_message_counts
+      IMPORTING
+        it_counts TYPE tt_message_counts
+      CHANGING
+        ct_days   TYPE tt_days.
 
     "! Dzień tygodnia (nazwa) i znacznik weekendu (SAT / SUN) dla daty wiersza
     CLASS-METHODS set_day_of_week
@@ -118,6 +133,14 @@ CLASS zcl_wb_rcz_day_query DEFINITION
         iv_first_day       TYPE d
       RETURNING
         VALUE(rv_last_day) TYPE d.
+
+    CLASS-METHODS read_message_counts
+      IMPORTING
+        iv_pernr         TYPE pernr_d
+        iv_fpper         TYPE fpper
+        it_datcz         TYPE tt_datcz_range
+      RETURNING
+        VALUE(rt_counts) TYPE tt_message_counts.
 
     CLASS-METHODS read_records
       IMPORTING
@@ -280,13 +303,24 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
 
     DATA(lt_days) = build_days( read_records( lt_filter ) ).
     " Wszystkie dni okresu, także bez rekordów czasu
+    DATA(lv_pernr) = CONV pernr_d( single_value( it_filter = lt_filter iv_name = `PERNR` ) ).
+    DATA(lv_fpper) = CONV fpper( single_value( it_filter = lt_filter iv_name = `FPPER` ) ).
+    DATA(lt_datcz) = CORRESPONDING tt_datcz_range( VALUE #( lt_filter[ name = 'DATCZ' ]-range OPTIONAL ) ).
     add_missing_days(
       EXPORTING
-        iv_pernr = CONV #( single_value( it_filter = lt_filter iv_name = `PERNR` ) )
-        iv_fpper = CONV #( single_value( it_filter = lt_filter iv_name = `FPPER` ) )
-        it_datcz = CORRESPONDING #( VALUE #( lt_filter[ name = 'DATCZ' ]-range OPTIONAL ) )
+        iv_pernr = lv_pernr
+        iv_fpper = lv_fpper
+        it_datcz = lt_datcz
       CHANGING
         ct_days  = lt_days ).
+    " Liczby błędów i ostrzeżeń dnia (kolumna ikon w tabeli)
+    apply_message_counts(
+      EXPORTING
+        it_counts = read_message_counts( iv_pernr = lv_pernr
+                                         iv_fpper = lv_fpper
+                                         it_datcz = lt_datcz )
+      CHANGING
+        ct_days   = lt_days ).
     sort_days(
       EXPORTING
         it_sort = lt_sort
@@ -434,6 +468,51 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
     lv_next_month = lv_next_month + 4.
     lv_next_month+6(2) = '01'.
     rv_last_day = lv_next_month - 1.
+
+  ENDMETHOD.
+
+
+  METHOD read_message_counts.
+
+    DATA lt_dakom TYPE RANGE OF /querc/rcz_e_dakom.
+
+    IF iv_pernr IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Dni okresu: cały miesiąc FPPER albo dni z filtra (np. jeden dzień)
+    IF it_datcz IS NOT INITIAL.
+      lt_dakom = CORRESPONDING #( it_datcz ).
+    ELSEIF is_month_period( iv_fpper ) = abap_true.
+      DATA(lv_first_day) = CONV d( |{ iv_fpper }01| ).
+      lt_dakom = VALUE #( ( sign = 'I' option = 'BT' low = lv_first_day high = last_day_of_month( lv_first_day ) ) ).
+    ELSE.
+      RETURN.
+    ENDIF.
+
+    SELECT dakom, tykom, COUNT( * ) AS msg_count
+      FROM /querc/rcz_komp
+      WHERE pernr = @iv_pernr
+        AND dakom IN @lt_dakom
+        AND tykom IN ( 'E', 'W' )
+      GROUP BY dakom, tykom
+      INTO CORRESPONDING FIELDS OF TABLE @rt_counts.
+
+  ENDMETHOD.
+
+
+  METHOD apply_message_counts.
+
+    LOOP AT ct_days ASSIGNING FIELD-SYMBOL(<ls_day>).
+      LOOP AT it_counts INTO DATA(ls_count) WHERE dakom = <ls_day>-datcz.
+        CASE ls_count-tykom.
+          WHEN 'E'.
+            <ls_day>-errorcount = <ls_day>-errorcount + ls_count-msg_count.
+          WHEN 'W'.
+            <ls_day>-warningcount = <ls_day>-warningcount + ls_count-msg_count.
+        ENDCASE.
+      ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.
 

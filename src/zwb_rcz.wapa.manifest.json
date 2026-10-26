@@ -5,7 +5,7 @@
         "type": "application",
         "i18n": "i18n/i18n.properties",
         "applicationVersion": {
-            "version": "1.0.0"
+            "version": "1.1.0"
         },
         "title": "{{appTitle}}",
         "description": "{{appDescription}}",
@@ -121,7 +121,7 @@
                                     "columns": {
                                         "MsgCell": {
                                             "header": "{i18n>colMessages}",
-                                            "template": "zwb.rcz.ext.fragment.MessageCell",
+                                            "template": "zwb.rcz.ext.fragment.MessageBadgesCell",
                                             "width": "6rem",
                                             "horizontalAlign": "Begin",
                                             "properties": [

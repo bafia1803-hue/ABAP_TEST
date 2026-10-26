@@ -64,10 +64,10 @@
    internal_rep_path = "ext/fragment/DateCell.fragment.xml" />
 
   <MappingEntry
-   path              = "ext/fragment/MessageCell.fragment.xml"
+   path              = "ext/fragment/MessageBadgesCell.fragment.xml"
    is_folder         = ""
    internal_rep      = "B"
-   internal_rep_path = "ext/fragment/MessageCell.fragment.xml" />
+   internal_rep_path = "ext/fragment/MessageBadgesCell.fragment.xml" />
 
   <MappingEntry
    path              = "ext/fragment/WeekdayCell.fragment.xml"

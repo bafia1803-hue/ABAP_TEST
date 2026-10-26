@@ -9,9 +9,10 @@ sap.ui.define([
     "zwb/rcz/ext/SelectionReport",
     "zwb/rcz/ext/MessagePanel",
     "sap/ui/core/format/DateFormat",
-    "zwb/rcz/ext/ThemeSwitch"
+    "zwb/rcz/ext/ThemeSwitch",
+    "zwb/rcz/ext/HeaderActions"
 ], function (ControllerExtension, Element, MessageToast, Filter, FilterOperator,
-             MonthTotals, RangeSelection, SelectionReport, MessagePanel, DateFormat, ThemeSwitch) {
+             MonthTotals, RangeSelection, SelectionReport, MessagePanel, DateFormat, ThemeSwitch, HeaderActions) {
     "use strict";
 
     // Rozszerzenie strony listy dni (manifest.json -> sap.ui5/extends).
@@ -84,6 +85,7 @@ sap.ui.define([
         override: {
             onInit: function () {
                 current = this;
+                HeaderActions.setListReport(this);
                 this._hiddenColumns = [];
                 this._lastCell = null;
                 this._pendingNavigation = null;

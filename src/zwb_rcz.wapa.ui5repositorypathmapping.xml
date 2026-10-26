@@ -76,6 +76,12 @@
    internal_rep_path = "ext/fragment/WeekdayCell.fragment.xml" />
 
   <MappingEntry
+   path              = "ext/HeaderActions.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/HeaderActions.js" />
+
+  <MappingEntry
    path              = "ext/ListReportExt.controller.js"
    is_folder         = ""
    internal_rep      = "B"

@@ -10,7 +10,10 @@ sap.ui.define([
     // Dane dnia (showDay):
     // { title, subtitle, weekend: "" | "sat" | "sun",
     //   rows: [{ id, title, text, focused, color,
-    //            bars: [{ start, end, continues, label, tooltip }] }] }   start / end w minutach 0-1440
+    //            bars: [{ start, end, continues, carried, label, tooltip,
+    //                     details: { title, time, duration, note } }] }] }   start / end w minutach 0-1440
+    // continues = przedział kończy się następnego dnia, carried = dokończenie przedziału z poprzedniego dnia.
+    // Kliknięcie w pasek otwiera okienko ze szczegółami (details), kliknięcie obok je zamyka.
 
     var DURATION = 360;
     var MINUTES_PER_DAY = 1440;
@@ -81,8 +84,15 @@ sap.ui.define([
             }
         },
 
+        exit: function () {
+            this._closePopover();
+        },
+
         init: function () {
             this._day = null;
+            this._details = new WeakMap();
+            this._popover = null;
+            this._suppressClick = false;
             this._loading = false;
             this._drag = null;
             this._wheel = { sum: 0, lockedUntil: 0 };
@@ -173,12 +183,27 @@ sap.ui.define([
             var that = this;
 
             root.addEventListener("click", function (event) {
-                var button = event.target.closest(".zwbTl-nav");
-                if (button) {
-                    that._navigate(Number(button.dataset.direction));
+                that._onClick(event);
+            });
+            document.addEventListener("click", function (event) {
+                if (that._popover && !root.contains(event.target) && !event.target.closest(".zwbTl-pop")) {
+                    that._closePopover();
+                }
+            });
+            // Przewinięcie strony przesuwa pasek - okienko się zamyka
+            document.addEventListener("scroll", function () {
+                that._closePopover();
+            }, true);
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    that._closePopover();
                 }
             });
             root.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    that._closePopover();
+                    return;
+                }
                 if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
                     event.preventDefault();
                     that._navigate(event.key === "ArrowLeft" ? -1 : 1);
@@ -200,6 +225,7 @@ sap.ui.define([
                 that._onPointerUp(event);
             });
             window.addEventListener("resize", function () {
+                that._closePopover();
                 that._updateWidthClass();
             });
         },
@@ -213,7 +239,87 @@ sap.ui.define([
         },
 
         _navigate: function (direction) {
+            this._closePopover();
             this.fireNavigate({ direction: direction });
+        },
+
+        _onClick: function (event) {
+            // Kliknięcie kończące przeciąganie nie otwiera okienka
+            if (this._suppressClick) {
+                this._suppressClick = false;
+                return;
+            }
+            var button = event.target.closest(".zwbTl-nav");
+            if (button) {
+                this._navigate(Number(button.dataset.direction));
+                return;
+            }
+            var bar = event.target.closest(".zwbTl-bar");
+            if (bar) {
+                this._togglePopover(bar);
+            } else if (!event.target.closest(".zwbTl-pop")) {
+                this._closePopover();
+            }
+        },
+
+        // ------------------------------------------------------------------ okienko szczegółów paska
+        _togglePopover: function (bar) {
+            if (this._popover && this._popover.bar === bar) {
+                this._closePopover();
+                return;
+            }
+            this._closePopover();
+            var details = this._details.get(bar);
+            if (!details) {
+                return;
+            }
+
+            var pop = create("div", "zwbTl-pop");
+            pop.setAttribute("role", "dialog");
+            pop.style.setProperty("--zwb-color", getComputedStyle(bar).getPropertyValue("--zwb-color"));
+            pop.appendChild(create("div", "zwbTl-popTitle", details.title));
+            pop.appendChild(create("div", "zwbTl-popTime", details.time));
+            if (details.duration) {
+                pop.appendChild(create("div", "zwbTl-popLine", details.duration));
+            }
+            if (details.note) {
+                pop.appendChild(create("div", "zwbTl-popNote", details.note));
+            }
+            // Okienko leży nad całą stroną (nie jest przycinane przez ramkę wykresu)
+            document.body.appendChild(pop);
+
+            // Nad paskiem, a gdy brak miejsca - pod nim; zawsze w granicach okna przeglądarki
+            var barRect = bar.getBoundingClientRect();
+            var margin = 8;
+            var center = barRect.left + barRect.width / 2;
+            var left = Math.max(margin, Math.min(window.innerWidth - pop.offsetWidth - margin, center - pop.offsetWidth / 2));
+            var top = barRect.top - pop.offsetHeight - 12;
+            if (top < margin) {
+                top = barRect.bottom + 12;
+                pop.classList.add("is-below");
+            }
+            pop.style.left = left + "px";
+            pop.style.top = top + "px";
+            pop.style.setProperty("--zwb-arrow-x", Math.max(12, Math.min(pop.offsetWidth - 12, center - left)) + "px");
+
+            bar.classList.add("is-selected");
+            this._popover = { element: pop, bar: bar };
+            nextFrame(function () {
+                pop.classList.add("is-open");
+            });
+        },
+
+        _closePopover: function () {
+            var popover = this._popover;
+            if (!popover) {
+                return;
+            }
+            this._popover = null;
+            popover.bar.classList.remove("is-selected");
+            popover.element.classList.remove("is-open");
+            setTimeout(function () {
+                popover.element.remove();
+            }, 200);
         },
 
         // ------------------------------------------------------------------ gesty
@@ -266,6 +372,9 @@ sap.ui.define([
             var root = this._refs.root;
             root.classList.remove("is-dragging");
             root.style.setProperty("--zwb-drag", "0px");
+            if (drag.active) {
+                this._suppressClick = true;
+            }
             if (drag.active && Math.abs(drag.dx) >= SWIPE_THRESHOLD) {
                 // Przeciągnięcie w lewo = następny dzień (jak przewracanie kartki)
                 this._navigate(drag.dx < 0 ? 1 : -1);
@@ -277,6 +386,7 @@ sap.ui.define([
             var animate = !instant && !reducedMotion();
             var refs = this._refs;
 
+            this._closePopover();
             refs.root.classList.toggle("has-focus", day.rows.some(function (row) {
                 return row.focused;
             }));
@@ -444,13 +554,18 @@ sap.ui.define([
         _createBars: function (row) {
             var bars = create("div", "zwbTl-bars");
             row.bars.forEach(function (bar) {
-                var element = create("div", "zwbTl-bar" + (bar.continues ? " is-continued" : ""));
+                var element = create("div", "zwbTl-bar"
+                    + (bar.continues ? " is-continued" : "")
+                    + (bar.carried ? " is-carried" : ""));
                 element.style.left = percent(bar.start);
                 element.style.width = "calc(" + percent(bar.end) + " - " + percent(bar.start) + ")";
                 element.title = bar.tooltip;
                 element.appendChild(create("span", "zwbTl-barText", bar.label));
+                if (bar.details) {
+                    this._details.set(element, bar.details);
+                }
                 bars.appendChild(element);
-            });
+            }, this);
             return bars;
         },
 

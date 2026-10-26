@@ -11,6 +11,7 @@ sap.ui.define([
     // Adres: TimeResultDay(Pernr='...',Fpper='...',Datcz=RRRR-MM-DD)?focus=<pole kolumny>
     // Dane: encja TimeSlice (ZC_WB_RCZ_SLICE) - wiersz = rodzaj czasu i jeden jego przedział godzin.
     // Zmiana dnia odbywa się w miejscu (bez zmiany adresu); dni sąsiednie są wczytywane z wyprzedzeniem.
+    // Przedziały poprzedniego dnia trwające po północy są pokazywane jako jego dokończenie (od 00:00).
 
     var DAY_ROUTE = "TimeResultDayObjectPage";
     var LIST_ROUTE = "TimeResultDayList";
@@ -60,6 +61,11 @@ sap.ui.define([
             hash = (hash * 31 + character.charCodeAt(0)) % 9973;
         });
         return PALETTE[hash % PALETTE.length];
+    }
+
+    // Minuty jako czas trwania, np. 240 -> "4:00"
+    function formatDuration(minutes) {
+        return Math.floor(minutes / 60) + ":" + String(minutes % 60).padStart(2, "0");
     }
 
     function sameColumn(slice, focus) {
@@ -131,19 +137,27 @@ sap.ui.define([
             var request = {};
             this._current = { key: key, focus: focus, request: request };
 
-            var loaded = this._cache[key.Datcz] && this._cache[key.Datcz].done;
+            var previous = this._cache[this._shiftKey(key, -1).Datcz];
+            var loaded = this._cache[key.Datcz] && this._cache[key.Datcz].done && previous && previous.done;
             if (!loaded) {
                 timeline.setLoading(true);
             }
 
-            this._readDay(key)
-                .then(function (slices) {
+            // Dzień i poprzedni dzień (przedziały nocne przechodzące przez północ)
+            var previousKey = this._shiftKey(key, -1);
+            Promise.all([
+                this._readDay(key),
+                this._readDay(previousKey).catch(function () {
+                    return [];
+                })
+            ])
+                .then(function (results) {
                     // Wynik starszego żądania (szybkie przewijanie) jest pomijany
                     if (this._current.request !== request) {
                         return;
                     }
                     timeline.setLoading(false);
-                    timeline.showDay(this._buildDay(key, slices, focus), direction);
+                    timeline.showDay(this._buildDay(key, results[0], focus, previousKey, results[1]), direction);
                     this._prefetch(key);
                 }.bind(this))
                 .catch(function (error) {
@@ -190,18 +204,19 @@ sap.ui.define([
         },
 
         // Wycinki -> dane kontrolki: jeden wiersz na rodzaj czasu, wyróżnione na górze
-        _buildDay: function (key, slices, focus) {
+        _buildDay: function (key, slices, focus, previousKey, previousSlices) {
             var rowsById = {};
             var rows = [];
+            var nextDayText = this._getText("timelineToNext");
+            var fromPreviousText = this._getText("timelineFromPrev", [this._formatShortDay(previousKey.Datcz)]);
 
-            slices.forEach(function (slice) {
+            var getRow = function (slice, text) {
                 var row = rowsById[slice.Rodcz];
                 if (!row) {
-                    var title = slice.RodczName || slice.Rodcz;
                     row = {
                         id: slice.Rodcz,
-                        title: title,
-                        text: this._getText("timelineRowText", [slice.Rodcz, slice.TotalTime]),
+                        title: slice.RodczName || slice.Rodcz,
+                        text: text,
                         focused: sameColumn(slice, focus),
                         color: colorOf(slice.Rodcz),
                         bars: []
@@ -209,14 +224,26 @@ sap.ui.define([
                     rowsById[slice.Rodcz] = row;
                     rows.push(row);
                 }
+                return row;
+            };
+
+            slices.forEach(function (slice) {
+                var row = getRow(slice, this._getText("timelineRowText", [slice.Rodcz, slice.TotalTime]));
                 if (slice.SliceNo > 0) {
                     var period = slice.BeginTime + " – " + slice.EndTime;
+                    var continues = slice.EndMin > MINUTES_PER_DAY;
                     row.bars.push({
                         start: slice.BeginMin,
                         end: Math.min(slice.EndMin, MINUTES_PER_DAY),
-                        continues: slice.EndMin > MINUTES_PER_DAY,
+                        continues: continues,
                         label: period,
-                        tooltip: row.title + ": " + period
+                        tooltip: row.title + ": " + period,
+                        details: {
+                            title: row.title,
+                            time: period,
+                            duration: this._getText("timelineDuration", [formatDuration(slice.EndMin - slice.BeginMin)]),
+                            note: continues ? nextDayText : ""
+                        }
                     });
                 }
             }, this);
@@ -225,6 +252,28 @@ sap.ui.define([
                 if (!row.bars.length) {
                     row.text = row.text + " · " + this._getText("timelineNoSlices");
                 }
+            }, this);
+
+            // Dokończenie nocnych przedziałów z poprzedniego dnia (od 00:00)
+            previousSlices.forEach(function (slice) {
+                if (!(slice.SliceNo > 0 && slice.EndMin > MINUTES_PER_DAY)) {
+                    return;
+                }
+                var row = getRow(slice, this._getText("timelineCarryRowText", [slice.Rodcz]));
+                var period = slice.BeginTime + " – " + slice.EndTime;
+                row.bars.push({
+                    start: 0,
+                    end: Math.min(slice.EndMin - MINUTES_PER_DAY, MINUTES_PER_DAY),
+                    carried: true,
+                    label: period,
+                    tooltip: fromPreviousText + ": " + period,
+                    details: {
+                        title: row.title,
+                        time: period,
+                        duration: this._getText("timelineDuration", [formatDuration(slice.EndMin - slice.BeginMin)]),
+                        note: fromPreviousText
+                    }
+                });
             }, this);
 
             rows.sort(function (a, b) {
@@ -242,6 +291,10 @@ sap.ui.define([
                 weekend: weekday === 6 ? "sat" : weekday === 0 ? "sun" : "",
                 rows: rows
             };
+        },
+
+        _formatShortDay: function (isoDay) {
+            return DateFormat.getDateInstance({ pattern: "d MMMM" }).format(toDate(isoDay));
         },
 
         _getText: function (key, args) {

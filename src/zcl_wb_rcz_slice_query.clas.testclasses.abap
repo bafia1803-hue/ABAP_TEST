@@ -8,6 +8,7 @@ CLASS ltcl_rcz_slice DEFINITION FINAL FOR TESTING
     METHODS empty_time_type_skipped FOR TESTING.
     METHODS time_type_without_slices FOR TESTING.
     METHODS slice_over_midnight FOR TESTING.
+    METHODS adjacent_slices_merged FOR TESTING.
 
 ENDCLASS.
 
@@ -104,6 +105,35 @@ CLASS ltcl_rcz_slice IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = lt_slices[ 1 ]-beginmin exp = 1320 ).
     cl_abap_unit_assert=>assert_equals( act = lt_slices[ 1 ]-endmin exp = 1560 ).
     cl_abap_unit_assert=>assert_equals( act = CONV string( lt_slices[ 1 ]-endtime ) exp = `02:00` ).
+
+  ENDMETHOD.
+
+  METHOD adjacent_slices_merged.
+
+    " 22:00-22:30 i 22:30-02:00 stykają się -> jeden pasek 22:00-02:00; 03:00-04:00 osobno
+    DATA(lt_records) = VALUE zcl_wb_rcz_slice_query=>tt_time_records(
+      ( pernr = '00000011' fpper = '202610' datcz = '20261002' rodcz = '105' wskcz = 'W1' czilo = 300 ) ).
+    DATA(lt_cuts) = VALUE zcl_wb_rcz_slice_query=>tt_cuts(
+      ( pernr = '00000011' fpper = '202610' datwyc = '20261002' wskcz = 'W1' godzod = '223000' godzdo = '020000' )
+      ( pernr = '00000011' fpper = '202610' datwyc = '20261002' wskcz = 'W1' godzod = '220000' godzdo = '223000' )
+      ( pernr = '00000011' fpper = '202610' datwyc = '20261002' wskcz = 'W1' godzod = '030000' godzdo = '040000' ) ).
+
+    DATA(lt_slices) = zcl_wb_rcz_slice_query=>build_slices(
+      it_records = lt_records
+      it_cuts    = lt_cuts
+      it_names   = VALUE #( ) ).
+
+    cl_abap_unit_assert=>assert_equals( act = lines( lt_slices ) exp = 2 ).
+
+    DATA(ls_early) = lt_slices[ sliceno = 1 ].
+    cl_abap_unit_assert=>assert_equals( act = ls_early-beginmin exp = 180 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_early-endmin exp = 240 ).
+
+    DATA(ls_night) = lt_slices[ sliceno = 2 ].
+    cl_abap_unit_assert=>assert_equals( act = ls_night-beginmin exp = 1320 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_night-endmin exp = 1560 ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_night-begintime ) exp = `22:00` ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_night-endtime ) exp = `02:00` ).
 
   ENDMETHOD.
 

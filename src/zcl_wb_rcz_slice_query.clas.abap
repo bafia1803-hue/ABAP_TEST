@@ -72,6 +72,13 @@ CLASS zcl_wb_rcz_slice_query DEFINITION
         wskcz   TYPE tt_wskcz,
       END OF ty_time_type_day.
     TYPES tt_time_type_days TYPE STANDARD TABLE OF ty_time_type_day WITH EMPTY KEY.
+    TYPES:
+      " Przedział czasu w minutach od północy dnia (koniec może przekraczać 1440)
+      BEGIN OF ty_interval,
+        begin TYPE i,
+        end   TYPE i,
+      END OF ty_interval.
+    TYPES tt_intervals TYPE STANDARD TABLE OF ty_interval WITH EMPTY KEY.
 
     CONSTANTS c_minutes_per_day TYPE i VALUE 1440.
 
@@ -80,6 +87,20 @@ CLASS zcl_wb_rcz_slice_query DEFINITION
         it_records     TYPE tt_time_records
       RETURNING
         VALUE(rt_days) TYPE tt_time_type_days.
+
+    "! Łączy przedziały stykające się lub nakładające, np. 22:00-22:30 + 22:30-02:00 = 22:00-02:00
+    CLASS-METHODS merge_intervals
+      IMPORTING
+        it_intervals       TYPE tt_intervals
+      RETURNING
+        VALUE(rt_intervals) TYPE tt_intervals.
+
+    CLASS-METHODS intervals_of_time_type
+      IMPORTING
+        is_time_type        TYPE ty_time_type_day
+        it_cuts             TYPE tt_cuts
+      RETURNING
+        VALUE(rt_intervals) TYPE tt_intervals.
 
     CLASS-METHODS add_slices_of_time_type
       IMPORTING
@@ -269,35 +290,64 @@ CLASS zcl_wb_rcz_slice_query IMPLEMENTATION.
       columnname = zcl_wb_rcz_day_query=>get_column( is_time_type-rodcz )
       totaltime  = zcl_wb_rcz_day_query=>format_minutes( is_time_type-minutes ) ).
 
-    DATA(lt_cuts) = VALUE tt_cuts(
-      FOR ls_cut IN it_cuts
-      WHERE ( pernr  = is_time_type-pernr
-          AND fpper  = is_time_type-fpper
-          AND datwyc = is_time_type-datcz )
-      ( ls_cut ) ).
-    SORT lt_cuts BY godzod godzdo.
+    " Ciągłe wycinki (np. 22:00-22:30 i 22:30-02:00) są pokazywane jako jeden pasek
+    DATA(lt_intervals) = merge_intervals( intervals_of_time_type( is_time_type = is_time_type
+                                                                  it_cuts      = it_cuts ) ).
 
-    LOOP AT lt_cuts INTO DATA(ls_matching_cut).
-      IF NOT line_exists( is_time_type-wskcz[ table_line = ls_matching_cut-wskcz ] ).
-        CONTINUE.
-      ENDIF.
-
-      ls_slice-sliceno = ls_slice-sliceno + 1.
-      ls_slice-beginmin = time_to_minutes( ls_matching_cut-godzod ).
-      ls_slice-endmin = time_to_minutes( ls_matching_cut-godzdo ).
-      " Wycinek przechodzący przez północ kończy się następnego dnia
-      IF ls_slice-endmin <= ls_slice-beginmin.
-        ls_slice-endmin = ls_slice-endmin + c_minutes_per_day.
-      ENDIF.
-      ls_slice-begintime = zcl_wb_rcz_day_query=>format_minutes( ls_slice-beginmin ).
-      ls_slice-endtime = zcl_wb_rcz_day_query=>format_minutes( ls_slice-endmin MOD c_minutes_per_day ).
+    LOOP AT lt_intervals INTO DATA(ls_interval).
+      ls_slice-sliceno = sy-tabix.
+      ls_slice-beginmin = ls_interval-begin.
+      ls_slice-endmin = ls_interval-end.
+      ls_slice-begintime = zcl_wb_rcz_day_query=>format_minutes( ls_interval-begin ).
+      ls_slice-endtime = zcl_wb_rcz_day_query=>format_minutes( ls_interval-end MOD c_minutes_per_day ).
       INSERT ls_slice INTO TABLE ct_slices.
     ENDLOOP.
 
     " Rodzaj czasu bez wycinków - jeden wiersz bez godzin, żeby był widoczny na osi
-    IF ls_slice-sliceno = 0.
+    IF lt_intervals IS INITIAL.
       INSERT ls_slice INTO TABLE ct_slices.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD intervals_of_time_type.
+
+    LOOP AT it_cuts INTO DATA(ls_cut)
+         WHERE pernr  = is_time_type-pernr
+           AND fpper  = is_time_type-fpper
+           AND datwyc = is_time_type-datcz.
+      IF NOT line_exists( is_time_type-wskcz[ table_line = ls_cut-wskcz ] ).
+        CONTINUE.
+      ENDIF.
+
+      DATA(ls_interval) = VALUE ty_interval( begin = time_to_minutes( ls_cut-godzod )
+                                             end   = time_to_minutes( ls_cut-godzdo ) ).
+      " Wycinek przechodzący przez północ kończy się następnego dnia
+      IF ls_interval-end <= ls_interval-begin.
+        ls_interval-end = ls_interval-end + c_minutes_per_day.
+      ENDIF.
+      INSERT ls_interval INTO TABLE rt_intervals.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD merge_intervals.
+
+    DATA(lt_sorted) = it_intervals.
+    SORT lt_sorted BY begin end.
+
+    LOOP AT lt_sorted INTO DATA(ls_interval).
+      ASSIGN rt_intervals[ lines( rt_intervals ) ] TO FIELD-SYMBOL(<ls_previous>).
+      IF sy-subrc = 0 AND ls_interval-begin <= <ls_previous>-end.
+        " Styka się albo nakłada na poprzedni - wydłużamy poprzedni
+        <ls_previous>-end = nmax( val1 = <ls_previous>-end
+                                  val2 = ls_interval-end ).
+      ELSE.
+        INSERT ls_interval INTO TABLE rt_intervals.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

@@ -26,6 +26,39 @@
     <item>
      <ATTRIBUTES>
       <APPLNAME>ZWB_RCZ</APPLNAME>
+      <PAGEKEY>CSS/STYLE.CSS</PAGEKEY>
+      <PAGENAME>css/style.css</PAGENAME>
+      <PAGETYPE>X</PAGETYPE>
+      <LAYOUTLANGU>L</LAYOUTLANGU>
+      <VERSION>A</VERSION>
+      <LANGU>L</LANGU>
+     </ATTRIBUTES>
+    </item>
+    <item>
+     <ATTRIBUTES>
+      <APPLNAME>ZWB_RCZ</APPLNAME>
+      <PAGEKEY>EXT/FRAGMENT/DATECELL.FRAGMENT.XML</PAGEKEY>
+      <PAGENAME>ext/fragment/DateCell.fragment.xml</PAGENAME>
+      <PAGETYPE>X</PAGETYPE>
+      <LAYOUTLANGU>L</LAYOUTLANGU>
+      <VERSION>A</VERSION>
+      <LANGU>L</LANGU>
+     </ATTRIBUTES>
+    </item>
+    <item>
+     <ATTRIBUTES>
+      <APPLNAME>ZWB_RCZ</APPLNAME>
+      <PAGEKEY>EXT/FRAGMENT/WEEKDAYCELL.FRAGMENT.XML</PAGEKEY>
+      <PAGENAME>ext/fragment/WeekdayCell.fragment.xml</PAGENAME>
+      <PAGETYPE>X</PAGETYPE>
+      <LAYOUTLANGU>L</LAYOUTLANGU>
+      <VERSION>A</VERSION>
+      <LANGU>L</LANGU>
+     </ATTRIBUTES>
+    </item>
+    <item>
+     <ATTRIBUTES>
+      <APPLNAME>ZWB_RCZ</APPLNAME>
       <PAGEKEY>EXT/LISTREPORTEXT.CONTROLLER.JS</PAGEKEY>
       <PAGENAME>ext/ListReportExt.controller.js</PAGENAME>
       <PAGETYPE>X</PAGETYPE>

@@ -17,6 +17,8 @@ sap.ui.define([
     var ENTITY_SET = "/TimeResultDay";
     var DAY_ROUTE = "TimeResultDayObjectPage";
     var KEY_FIELDS = ["Pernr", "Fpper", "Datcz"];
+    // Kolumny, które nie są godzinami (nie ukrywamy ich i nie wyróżniamy po dwukliku)
+    var NON_TIME_COLUMNS = KEY_FIELDS.concat(["DateCell", "WeekdayCell", "DayOfWeek", "WeekendType"]);
     var EMPTY_VALUES = ["", "00:00"];
     // Czas na drugie kliknięcie: dopiero po nim wiadomo, czy to dwuklik
     var DOUBLE_CLICK_MS = 400;
@@ -35,8 +37,8 @@ sap.ui.define([
         return String(key || "").split("::").pop();
     }
 
-    function isKeyField(fieldName) {
-        return KEY_FIELDS.indexOf(fieldName) >= 0;
+    function isTimeColumn(fieldName) {
+        return !!fieldName && NON_TIME_COLUMNS.indexOf(fieldName) < 0;
     }
 
     // "/TimeResultDay(Pernr='00000446',Fpper='202610',Datcz=2026-10-02)" -> to, co w nawiasie
@@ -107,7 +109,7 @@ sap.ui.define([
             this._restoreColumns(table);
 
             var columns = table.getColumns().filter(function (column) {
-                return !isKeyField(getFieldName(column));
+                return isTimeColumn(getFieldName(column));
             });
             var fieldNames = columns.map(getFieldName);
             log("Sprawdzam kolumny", fieldNames);
@@ -234,7 +236,7 @@ sap.ui.define([
             var mdcColumn = Element.registry.get(String(this._lastCell.columnId).replace(/-innerColumn$/, ""));
             var fieldName = mdcColumn && mdcColumn.isA("sap.ui.mdc.table.Column") ? getFieldName(mdcColumn) : "";
             log("Dwuklik w kolumnę", fieldName);
-            this._navigateToDay(this._lastCell.context, isKeyField(fieldName) ? "" : fieldName);
+            this._navigateToDay(this._lastCell.context, isTimeColumn(fieldName) ? fieldName : "");
         },
 
         _delayNavigation: function (context) {

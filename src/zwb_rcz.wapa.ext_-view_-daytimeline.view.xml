@@ -3,7 +3,8 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:unified="sap.ui.unified">
-    <!-- Oś czasu jednego dnia: wiersz = niepusty rodzaj czasu, pasek = wycinek GODZOD - GODZDO -->
+    <!-- Oś czasu jednego dnia: wiersz = niepusty rodzaj czasu, pasek = wycinek GODZOD - GODZDO.
+         Strzałki kalendarza przełączają dzień (onStartDateChange). -->
     <Page
         id="dayTimelinePage"
         title="{timeline>/title}"
@@ -34,7 +35,8 @@
                 showDayNamesLine="false"
                 showEmptyIntervalHeaders="false"
                 singleSelection="false"
-                stickyHeader="true">
+                stickyHeader="true"
+                startDateChange=".onStartDateChange">
                 <views>
                     <PlanningCalendarView
                         key="DayHours"
@@ -49,7 +51,6 @@
                         title="{timeline>title}"
                         text="{timeline>text}"
                         selected="{timeline>focused}"
-                        icon="{timeline>icon}"
                         appointments="{path: 'timeline>appointments', templateShareable: false}">
                         <appointments>
                             <unified:CalendarAppointment

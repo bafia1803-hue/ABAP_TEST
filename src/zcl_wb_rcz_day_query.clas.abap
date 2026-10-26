@@ -2,6 +2,7 @@
 "! Czyta /QUERC/RCZ_CZAS0 dla wybranego PERNR i FPPER, sumuje minuty CZILO
 "! dla grup rodzajów czasu (RODCZ) - każda grupa to jedna kolumna -
 "! i zwraca je w formacie hh:mm, jeden wiersz na dzień (DATCZ). Suma 0 = pusta komórka.
+"! Dni okresu FPPER bez rekordów też są zwracane (puste wiersze), z dniem tygodnia.
 "! Grupy rodzajów czasu są w CLASS_CONSTRUCTOR.
 CLASS zcl_wb_rcz_day_query DEFINITION
   PUBLIC
@@ -22,6 +23,7 @@ CLASS zcl_wb_rcz_day_query DEFINITION
         czilo TYPE /querc/rcz_e_czilo,
       END OF ty_time_record.
     TYPES tt_time_records TYPE STANDARD TABLE OF ty_time_record WITH EMPTY KEY.
+    TYPES tt_datcz_range TYPE RANGE OF /querc/rcz_e_datcz.
 
     CLASS-METHODS class_constructor.
 
@@ -39,6 +41,21 @@ CLASS zcl_wb_rcz_day_query DEFINITION
         iv_minutes     TYPE i
       RETURNING
         VALUE(rv_text) TYPE string.
+
+    "! Dodaje puste wiersze dla dni okresu FPPER (miesiąc RRRRMM) bez rekordów czasu
+    "! @parameter it_datcz | Ograniczenie dni (puste = cały miesiąc)
+    CLASS-METHODS add_missing_days
+      IMPORTING
+        iv_pernr TYPE pernr_d
+        iv_fpper TYPE fpper
+        it_datcz TYPE tt_datcz_range
+      CHANGING
+        ct_days  TYPE tt_days.
+
+    "! Dzień tygodnia (nazwa) i znacznik weekendu (SAT / SUN) dla daty wiersza
+    CLASS-METHODS set_day_of_week
+      CHANGING
+        cs_day TYPE zc_wb_rcz_day.
 
     "! Kolumna aplikacji (pole ZC_WB_RCZ_DAY, np. WORKEDTIME), do której należy rodzaj czasu;
     "! pusta, gdy rodzaj czasu nie należy do żadnej kolumny
@@ -82,6 +99,25 @@ CLASS zcl_wb_rcz_day_query DEFINITION
         it_records       TYPE tt_time_records
       RETURNING
         VALUE(rt_totals) TYPE tt_day_totals.
+
+    CLASS-METHODS single_value
+      IMPORTING
+        it_filter       TYPE if_rap_query_filter=>tt_name_range_pairs
+        iv_name         TYPE string
+      RETURNING
+        VALUE(rv_value) TYPE string.
+
+    CLASS-METHODS is_month_period
+      IMPORTING
+        iv_fpper         TYPE fpper
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
+
+    CLASS-METHODS last_day_of_month
+      IMPORTING
+        iv_first_day       TYPE d
+      RETURNING
+        VALUE(rv_last_day) TYPE d.
 
     CLASS-METHODS read_records
       IMPORTING
@@ -243,6 +279,14 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
     ENDTRY.
 
     DATA(lt_days) = build_days( read_records( lt_filter ) ).
+    " Wszystkie dni okresu, także bez rekordów czasu
+    add_missing_days(
+      EXPORTING
+        iv_pernr = CONV #( single_value( it_filter = lt_filter iv_name = `PERNR` ) )
+        iv_fpper = CONV #( single_value( it_filter = lt_filter iv_name = `FPPER` ) )
+        it_datcz = CORRESPONDING #( VALUE #( lt_filter[ name = 'DATCZ' ]-range OPTIONAL ) )
+      CHANGING
+        ct_days  = lt_days ).
     sort_days(
       EXPORTING
         it_sort = lt_sort
@@ -298,6 +342,7 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
          INTO DATA(ls_key).
 
       DATA(ls_day) = VALUE zc_wb_rcz_day( pernr = ls_key-pernr fpper = ls_key-fpper datcz = ls_key-datcz ).
+      set_day_of_week( CHANGING cs_day = ls_day ).
 
       LOOP AT gt_columns INTO DATA(ls_column).
         ASSIGN COMPONENT ls_column-name OF STRUCTURE ls_day TO FIELD-SYMBOL(<lv_value>).
@@ -334,6 +379,82 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD single_value.
+
+    " Wartość filtra, gdy jest dokładnie jedna (np. PERNR = 446)
+    DATA(lt_range) = VALUE #( it_filter[ name = iv_name ]-range OPTIONAL ).
+    IF lines( lt_range ) = 1 AND lt_range[ 1 ]-sign = 'I' AND lt_range[ 1 ]-option = 'EQ'.
+      rv_value = lt_range[ 1 ]-low.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_missing_days.
+
+    IF iv_pernr IS INITIAL OR is_month_period( iv_fpper ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    DATA(lv_day) = CONV d( |{ iv_fpper }01| ).
+    DATA(lv_last_day) = last_day_of_month( lv_day ).
+
+    WHILE lv_day <= lv_last_day.
+      IF lv_day IN it_datcz
+          AND NOT line_exists( ct_days[ pernr = iv_pernr fpper = iv_fpper datcz = lv_day ] ).
+        DATA(ls_day) = VALUE zc_wb_rcz_day( pernr = iv_pernr fpper = iv_fpper datcz = lv_day ).
+        set_day_of_week( CHANGING cs_day = ls_day ).
+        INSERT ls_day INTO TABLE ct_days.
+      ENDIF.
+      lv_day = lv_day + 1.
+    ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD is_month_period.
+
+    " FPPER w postaci RRRRMM, np. 202609
+    rv_result = boolc( iv_fpper CO '0123456789'
+                       AND strlen( iv_fpper ) = 6
+                       AND iv_fpper+4(2) BETWEEN '01' AND '12' ).
+
+  ENDMETHOD.
+
+
+  METHOD last_day_of_month.
+
+    " 28. dzień + 4 dni zawsze wypada w następnym miesiącu; jego 1. dzień - 1 = koniec miesiąca
+    DATA(lv_next_month) = iv_first_day.
+    lv_next_month+6(2) = '28'.
+    lv_next_month = lv_next_month + 4.
+    lv_next_month+6(2) = '01'.
+    rv_last_day = lv_next_month - 1.
+
+  ENDMETHOD.
+
+
+  METHOD set_day_of_week.
+
+    " 1 stycznia 1900 był poniedziałkiem
+    CONSTANTS lc_monday TYPE d VALUE '19000101'.
+    DATA(lv_index) = ( cs_day-datcz - lc_monday ) MOD 7.
+
+    cs_day-dayofweek = SWITCH #( lv_index
+                                 WHEN 0 THEN 'poniedziałek'
+                                 WHEN 1 THEN 'wtorek'
+                                 WHEN 2 THEN 'środa'
+                                 WHEN 3 THEN 'czwartek'
+                                 WHEN 4 THEN 'piątek'
+                                 WHEN 5 THEN 'sobota'
+                                 WHEN 6 THEN 'niedziela' ).
+    cs_day-weekendtype = SWITCH #( lv_index
+                                   WHEN 5 THEN 'SAT'
+                                   WHEN 6 THEN 'SUN' ).
 
   ENDMETHOD.
 

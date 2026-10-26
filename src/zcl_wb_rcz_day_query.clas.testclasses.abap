@@ -8,6 +8,8 @@ CLASS ltcl_rcz_day DEFINITION FINAL FOR TESTING
     METHODS format_over_99_hours FOR TESTING.
     METHODS sums_time_types_per_day FOR TESTING.
     METHODS unknown_time_type_is_ignored FOR TESTING.
+    METHODS all_days_of_period FOR TESTING.
+    METHODS day_of_week FOR TESTING.
 
 ENDCLASS.
 
@@ -67,6 +69,46 @@ CLASS ltcl_rcz_day IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( act = lines( lt_days ) exp = 1 ).
     cl_abap_unit_assert=>assert_equals( act = CONV string( lt_days[ 1 ]-plantime ) exp = `` ).
+
+  ENDMETHOD.
+
+  METHOD all_days_of_period.
+
+    " Wrzesień 2026: dane tylko 1.09, a wierszy ma być 30
+    DATA(lt_days) = zcl_wb_rcz_day_query=>build_days( VALUE #(
+      ( pernr = '00000011' fpper = '202609' datcz = '20260901' rodcz = '107' czilo = 480 ) ) ).
+
+    zcl_wb_rcz_day_query=>add_missing_days(
+      EXPORTING
+        iv_pernr = '00000011'
+        iv_fpper = '202609'
+        it_datcz = VALUE #( )
+      CHANGING
+        ct_days  = lt_days ).
+
+    cl_abap_unit_assert=>assert_equals( act = lines( lt_days ) exp = 30 ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( lt_days[ datcz = '20260901' ]-plantime ) exp = `08:00` ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( lt_days[ datcz = '20260905' ]-plantime ) exp = `` ).
+    cl_abap_unit_assert=>assert_true( xsdbool( line_exists( lt_days[ datcz = '20260930' ] ) ) ).
+
+  ENDMETHOD.
+
+
+  METHOD day_of_week.
+
+    DATA(ls_day) = VALUE zc_wb_rcz_day( datcz = '20260905' ).
+    zcl_wb_rcz_day_query=>set_day_of_week( CHANGING cs_day = ls_day ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-dayofweek ) exp = `sobota` ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-weekendtype ) exp = `SAT` ).
+
+    ls_day = VALUE zc_wb_rcz_day( datcz = '20260906' ).
+    zcl_wb_rcz_day_query=>set_day_of_week( CHANGING cs_day = ls_day ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-weekendtype ) exp = `SUN` ).
+
+    ls_day = VALUE zc_wb_rcz_day( datcz = '20260901' ).
+    zcl_wb_rcz_day_query=>set_day_of_week( CHANGING cs_day = ls_day ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-dayofweek ) exp = `wtorek` ).
+    cl_abap_unit_assert=>assert_initial( ls_day-weekendtype ).
 
   ENDMETHOD.
 

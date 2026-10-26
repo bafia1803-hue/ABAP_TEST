@@ -1,0 +1,11 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <!-- Kolumna "Data": sobota / niedziela wyróżnione w css/style.css (znacznik WeekendType) -->
+    <Text
+        text="{path: 'Datcz', type: 'sap.ui.model.odata.type.Date', formatOptions: {style: 'medium'}}"
+        class="zwbRczDayCell"
+        wrapping="false">
+        <customData>
+            <core:CustomData key="zwbday" value="{WeekendType}" writeToDom="true" />
+        </customData>
+    </Text>
+</core:FragmentDefinition>

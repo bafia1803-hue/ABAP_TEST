@@ -117,6 +117,32 @@
                                         }
                                     },
                                     "columns": {
+                                        "DateCell": {
+                                            "header": "{i18n>colDate}",
+                                            "template": "zwb.rcz.ext.fragment.DateCell",
+                                            "width": "7rem",
+                                            "horizontalAlign": "Begin",
+                                            "properties": [
+                                                "Datcz"
+                                            ],
+                                            "position": {
+                                                "anchor": "DataField::PlanTime",
+                                                "placement": "Before"
+                                            }
+                                        },
+                                        "WeekdayCell": {
+                                            "header": "{i18n>colWeekday}",
+                                            "template": "zwb.rcz.ext.fragment.WeekdayCell",
+                                            "width": "8rem",
+                                            "horizontalAlign": "Begin",
+                                            "properties": [
+                                                "DayOfWeek"
+                                            ],
+                                            "position": {
+                                                "anchor": "DateCell",
+                                                "placement": "After"
+                                            }
+                                        },
                                         "DataField::PlanTime": {
                                             "width": "5rem"
                                         },
@@ -194,9 +220,6 @@
                                         },
                                         "DataField::PrivExitBalance": {
                                             "width": "5rem"
-                                        },
-                                        "DataField::Datcz": {
-                                            "width": "7rem"
                                         }
                                     }
                                 }
@@ -225,6 +248,13 @@
                     }
                 }
             }
+        },
+        "resources": {
+            "css": [
+                {
+                    "uri": "css/style.css"
+                }
+            ]
         }
     },
     "sap.fiori": {

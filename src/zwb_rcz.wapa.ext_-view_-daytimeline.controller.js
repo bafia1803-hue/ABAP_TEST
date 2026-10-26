@@ -36,6 +36,18 @@ sap.ui.define([
         return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, minutes || 0);
     }
 
+    // Date -> "RRRR-MM-DD" (czas lokalny)
+    function toIsoDay(date) {
+        var month = String(date.getMonth() + 1).padStart(2, "0");
+        var day = String(date.getDate()).padStart(2, "0");
+        return date.getFullYear() + "-" + month + "-" + day;
+    }
+
+    // "2026-09-05" -> "202609"
+    function toMonthPeriod(isoDay) {
+        return isoDay.slice(0, 4) + isoDay.slice(5, 7);
+    }
+
     function sameColumn(slice, focus) {
         return !!focus && String(slice.ColumnName || "").trim().toUpperCase() === focus.toUpperCase();
     }
@@ -67,6 +79,31 @@ sap.ui.define([
             }
         },
 
+        // Strzałki / "Dzisiaj" w kalendarzu: inny dzień -> wczytanie jego osi czasu
+        onStartDateChange: function (event) {
+            var current = this._current;
+            if (!current) {
+                return;
+            }
+            var newDay = toIsoDay(event.getSource().getStartDate());
+            if (newDay === current.key.Datcz) {
+                // Przewinięcie w obrębie tego samego dnia (np. na wąskim ekranie)
+                return;
+            }
+
+            // Okres FPPER = miesiąc dnia, jeśli tak było dla bieżącego dnia
+            var fpper = current.key.Fpper === toMonthPeriod(current.key.Datcz)
+                ? toMonthPeriod(newDay)
+                : current.key.Fpper;
+            var parameters = {
+                key: "Pernr='" + current.key.Pernr + "',Fpper='" + fpper + "',Datcz=" + newDay
+            };
+            if (current.focus) {
+                parameters["?query"] = { focus: current.focus };
+            }
+            this.getAppComponent().getRouter().navTo(DAY_ROUTE, parameters, true);
+        },
+
         _onDayMatched: function (event) {
             this._showDay(event.getParameter("arguments"));
         },
@@ -76,6 +113,7 @@ sap.ui.define([
             var query = (routeArguments && routeArguments["?query"]) || {};
             var focus = query.focus || "";
             var timeline = this.getView().getModel("timeline");
+            this._current = { key: key, focus: focus };
 
             if (!key.Pernr || !key.Fpper || !key.Datcz) {
                 timeline.setData({ busy: false, rows: [], title: "", focusText: "" });
@@ -130,7 +168,6 @@ sap.ui.define([
                         title: slice.RodczName || slice.Rodcz,
                         text: this._getText("timelineRowText", [slice.Rodcz, slice.TotalTime]),
                         focused: focused,
-                        icon: focused ? "sap-icon://favorite" : "",
                         appointments: []
                     };
                     rowsByTimeType[slice.Rodcz] = row;

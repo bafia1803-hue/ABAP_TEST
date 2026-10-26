@@ -10,10 +10,40 @@
    internal_rep_path = "Component.js" />
 
   <MappingEntry
+   path              = "css"
+   is_folder         = "X"
+   internal_rep      = ""
+   internal_rep_path = "" />
+
+  <MappingEntry
+   path              = "css/style.css"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "css/style.css" />
+
+  <MappingEntry
    path              = "ext"
    is_folder         = "X"
    internal_rep      = ""
    internal_rep_path = "" />
+
+  <MappingEntry
+   path              = "ext/fragment"
+   is_folder         = "X"
+   internal_rep      = ""
+   internal_rep_path = "" />
+
+  <MappingEntry
+   path              = "ext/fragment/DateCell.fragment.xml"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/fragment/DateCell.fragment.xml" />
+
+  <MappingEntry
+   path              = "ext/fragment/WeekdayCell.fragment.xml"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/fragment/WeekdayCell.fragment.xml" />
 
   <MappingEntry
    path              = "ext/ListReportExt.controller.js"

@@ -1,0 +1,17 @@
+/* Weekend w kolumnach "Data" i "Dzień tygodnia" tabeli dni:
+   sobota - jasnoszare tło, czarny tekst; niedziela - jasnoczerwone tło, czerwony tekst */
+.sapUiTableCell:has(.zwbRczDayCell[data-zwbday="SAT"]) {
+    background-color: #f0f0f0 !important;
+}
+
+.sapUiTableCell:has(.zwbRczDayCell[data-zwbday="SUN"]) {
+    background-color: #fdeaea !important;
+}
+
+.zwbRczDayCell[data-zwbday="SAT"] {
+    color: #1d2d3e !important;
+}
+
+.zwbRczDayCell[data-zwbday="SUN"] {
+    color: #aa0808 !important;
+}

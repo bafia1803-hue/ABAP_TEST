@@ -58,9 +58,15 @@ define custom entity ZC_WB_RCZ_DAY
       @Consumption.filter: { mandatory: true, selectionType: #SINGLE, multipleSelections: false }
       @UI.selectionField: [{ position: 20 }]
   key Fpper : fpper;
+      // Data i dzień tygodnia są w tabeli kolumnami własnymi aplikacji (kolor weekendu)
       @EndUserText.label: 'Data'
-      @UI.lineItem: [{ position: 10, importance: #HIGH }]
   key Datcz : /querc/rcz_e_datcz;
+
+      @EndUserText.label: 'Dzień tygodnia'
+      DayOfWeek : abap.char( 15 );
+      // SAT = sobota, SUN = niedziela, puste = dzień roboczy
+      @UI.hidden: true
+      WeekendType : abap.char( 3 );
 
       @EndUserText.label: 'Plan'
       @UI: { lineItem: [{ position: 20, importance: #HIGH }],

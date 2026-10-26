@@ -5,7 +5,7 @@
         "type": "application",
         "i18n": "i18n/i18n.properties",
         "applicationVersion": {
-            "version": "1.1.0"
+            "version": "1.2.0"
         },
         "title": "{{appTitle}}",
         "description": "{{appDescription}}",
@@ -123,7 +123,7 @@
                                             "header": "{i18n>colMessages}",
                                             "template": "zwb.rcz.ext.fragment.MessageBadgesCell",
                                             "width": "6rem",
-                                            "horizontalAlign": "Begin",
+                                            "horizontalAlign": "Center",
                                             "properties": [
                                                 "ErrorCount",
                                                 "WarningCount"
@@ -246,6 +246,14 @@
                                         "zwbMessages": {
                                             "press": ".extension.zwb.rcz.ext.ListReportExt.openAllMessages",
                                             "text": "{i18n>messagesButton}"
+                                        },
+                                        "zwbTheme": {
+                                            "press": ".extension.zwb.rcz.ext.ListReportExt.toggleTheme",
+                                            "text": "{i18n>themeDark}",
+                                            "position": {
+                                                "placement": "After",
+                                                "anchor": "zwbMessages"
+                                            }
                                         }
                                     }
                                 }

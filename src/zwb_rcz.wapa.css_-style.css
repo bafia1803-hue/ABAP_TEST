@@ -1,3 +1,72 @@
+/* ======================================================================
+   Kolory aplikacji (jasny / ciemny). UI5 1.120 nie udostępnia zmiennych motywu SAP w CSS,
+   więc definiujemy je sami: jasne = Horizon, ciemne = Horizon Dark (klasa zwbRczDark na <html>).
+   ====================================================================== */
+:root {
+    --sapFontFamily: "72", "72full", Arial, Helvetica, sans-serif;
+    --sapFontSize: 0.875rem;
+    --sapBackgroundColor: #f5f6f7;
+    --sapTextColor: #1d2d3e;
+    --sapContent_LabelColor: #556b82;
+    --sapContent_IconColor: #1d2d3e;
+    --sapContent_FocusColor: #0070f2;
+    --sapNegativeTextColor: #aa0808;
+    --sapHighlightColor: #0064d9;
+    --sapSelectedColor: #0064d9;
+    --sapGroup_ContentBackground: #fff;
+    --sapGroup_TitleBorderColor: #c9c9c9;
+    --sapField_Background: #fff;
+    --sapList_BorderColor: #e5e5e5;
+    --sapList_HeaderBackground: #fff;
+    --sapList_HeaderBorderColor: #a8b2bd;
+    --sapList_Hover_Background: #eaecee;
+    --sapList_SelectionBackgroundColor: #ebf8ff;
+    --sapButton_Background: #fff;
+    --sapButton_BorderColor: #bcc3ca;
+    --sapButton_TextColor: #0064d9;
+    --sapButton_Hover_Background: #eaecee;
+    --sapButton_Lite_TextColor: #0064d9;
+    --sapButton_Lite_Hover_Background: #eaecee;
+    --sapButton_Selected_Background: #edf6ff;
+    --sapButton_Selected_BorderColor: #0064d9;
+    --sapButton_Selected_TextColor: #0064d9;
+    --sapContent_Shadow0: 0 0 0.125rem rgba(34, 53, 72, 0.15), 0 0.125rem 0.5rem rgba(34, 53, 72, 0.15);
+}
+
+html.zwbRczDark {
+    --sapBackgroundColor: #12171c;
+    --sapTextColor: #eaecee;
+    --sapContent_LabelColor: #a9b4be;
+    --sapContent_IconColor: #d5dadd;
+    --sapContent_FocusColor: #a6cfff;
+    --sapNegativeTextColor: #ff8888;
+    --sapHighlightColor: #4db1ff;
+    --sapSelectedColor: #4db1ff;
+    --sapGroup_ContentBackground: #1d232a;
+    --sapGroup_TitleBorderColor: #4a5866;
+    --sapField_Background: #171d24;
+    --sapList_BorderColor: #333f4b;
+    --sapList_HeaderBackground: #1d232a;
+    --sapList_HeaderBorderColor: #5b6b7b;
+    --sapList_Hover_Background: #26303a;
+    --sapList_SelectionBackgroundColor: #1b3550;
+    --sapButton_Background: #1d232a;
+    --sapButton_BorderColor: #5b6b7b;
+    --sapButton_TextColor: #a6cfff;
+    --sapButton_Hover_Background: #26303a;
+    --sapButton_Lite_TextColor: #a6cfff;
+    --sapButton_Lite_Hover_Background: #26303a;
+    --sapButton_Selected_Background: #1b3550;
+    --sapButton_Selected_BorderColor: #a6cfff;
+    --sapButton_Selected_TextColor: #d1e8ff;
+    --sapContent_Shadow0: 0 0 0 1px #333f4b, 0 0.25rem 1rem rgba(0, 0, 0, 0.55);
+}
+
+/* panel komunikatów odcina się od tła strony */
+html.zwbRczDark .zwbRczPanel {
+    background: #171d24;
+}
+
 /* Weekend w kolumnach "Data" i "Dzień tygodnia" tabeli dni:
    sobota - jasnoszare tło, czarny tekst; niedziela - jasnoczerwone tło, czerwony tekst */
 .sapUiTableCell:has(.zwbRczDayCell[data-zwbday="SAT"]) {
@@ -361,8 +430,8 @@
     padding-left: 1rem;
     background: repeating-linear-gradient(
         135deg,
-        color-mix(in srgb, var(--zwb-color) 75%, #fff) 0 0.375rem,
-        color-mix(in srgb, var(--zwb-color) 55%, #fff) 0.375rem 0.75rem);
+        color-mix(in srgb, var(--zwb-color) 75%, var(--zwb-carry-mix, #fff)) 0 0.375rem,
+        color-mix(in srgb, var(--zwb-color) 55%, var(--zwb-carry-mix, #fff)) 0.375rem 0.75rem);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zwb-color) 80%, #000);
 }
 
@@ -791,6 +860,7 @@
 .zwbRczMsgCell {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.625rem;
     cursor: pointer;
 }
@@ -1288,4 +1358,160 @@ body.zwbRczSplit #container {
 
 .zwbRczMsgBadge.is-warning .zwbRczMsgBadgeIcon {
     color: #e2a100;
+}
+
+/* ======================================================================
+   Tryb ciemny (motyw sap_horizon_dark + klasa zwbRczDark na <html>, ext/ThemeSwitch.js)
+   Kolory SAP (--sap...) zmieniają się same; tu tylko nasze stałe kolory.
+   ====================================================================== */
+html.zwbRczDark {
+    color-scheme: dark;
+    --zwb-shadow: rgba(0, 0, 0, 0.55);
+}
+
+/* weekend w tabeli dni */
+html.zwbRczDark .sapUiTableCell:has(.zwbRczDayCell[data-zwbday="SAT"]) {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.zwbRczDark .sapUiTableCell:has(.zwbRczDayCell[data-zwbday="SUN"]) {
+    background-color: rgba(255, 92, 92, 0.14) !important;
+}
+
+html.zwbRczDark .zwbRczDayCell[data-zwbday="SAT"] {
+    color: var(--sapTextColor, #eaecee) !important;
+}
+
+html.zwbRczDark .zwbRczDayCell[data-zwbday="SUN"] {
+    color: #ff8f8f !important;
+}
+
+/* zaznaczenie obszaru - mocniejsze na ciemnym tle */
+html.zwbRczDark .zwbRczTable .sapUiTableCell.zwbRczSel {
+    background-color: color-mix(in srgb, var(--sapSelectedColor, #4db1ff) 24%, transparent) !important;
+}
+
+/* oś czasu */
+html.zwbRczDark .zwbTl {
+    --zwb-carry-mix: #1b2633;
+    box-shadow: 0 0 0 1px var(--sapList_BorderColor, #3a4552), 0 0.25rem 1rem var(--zwb-shadow);
+}
+
+html.zwbRczDark .zwbTl-bar {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+html.zwbRczDark .zwbTl-bar.is-carried {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zwb-color) 70%, #fff);
+}
+
+html.zwbRczDark .zwbTl-bar.is-selected,
+html.zwbRczDark .zwbTl-bar.is-carried.is-selected {
+    box-shadow: 0 0 0 2px var(--sapGroup_ContentBackground, #1d232a), 0 0 0 4px var(--zwb-color);
+}
+
+html.zwbRczDark .zwbTl.has-focus .zwbTl-row:not(.is-focused) .zwbTl-bar {
+    opacity: 0.35;
+}
+
+html.zwbRczDark .zwbTl-pop {
+    box-shadow: 0 0 0 1px var(--sapList_BorderColor, #3a4552), 0 0.5rem 1.5rem var(--zwb-shadow);
+}
+
+html.zwbRczDark .zwbTl-pop::after {
+    box-shadow: none;
+}
+
+/* karta raportu i panel komunikatów */
+html.zwbRczDark .zwbRczReport {
+    box-shadow: 0 0 0 1px var(--sapList_BorderColor, #3a4552), 0 0.5rem 2rem var(--zwb-shadow);
+}
+
+html.zwbRczDark .zwbRczPanel {
+    box-shadow: 0 -1px 0 var(--sapList_BorderColor, #3a4552), 0 -0.5rem 2rem var(--zwb-shadow);
+}
+
+/* kolumna komunikatów */
+html.zwbRczDark .zwbRczMsgBadge.is-error .zwbRczMsgBadgeIcon {
+    color: #ff5f5f;
+}
+
+html.zwbRczDark .zwbRczMsgBadge.is-warning .zwbRczMsgBadgeIcon {
+    color: #ffc83d;
+}
+
+html.zwbRczDark .zwbRczMsgBadge.is-error .zwbRczMsgCount {
+    color: #ff8f8f;
+}
+
+html.zwbRczDark .zwbRczMsgBadge.is-warning .zwbRczMsgCount {
+    color: #ffd36b;
+}
+
+/* ikony komunikatów */
+html.zwbRczDark .zwbRczMsgIcon.is-error svg circle:first-child {
+    fill: #f03b3b;
+}
+
+html.zwbRczDark .zwbRczMsgIcon.is-warning svg .shape {
+    fill: #ffc83d;
+    stroke: #ffc83d;
+}
+
+html.zwbRczDark .zwbRczMsgIcon.is-info svg circle:first-child {
+    fill: #3d9bff;
+}
+
+/* tabela komunikatów */
+html.zwbRczDark .zwbRczMsgRow.is-error { border-left-color: #f03b3b; }
+html.zwbRczDark .zwbRczMsgRow.is-warning { border-left-color: #ffc83d; }
+html.zwbRczDark .zwbRczMsgRow.is-info { border-left-color: #3d9bff; }
+
+html.zwbRczDark .zwbRczMsgDay.is-sunday,
+html.zwbRczDark .zwbRczMsgWeekday.is-sunday {
+    color: #ff8f8f;
+}
+
+html.zwbRczDark .zwbRczMsgNoNumber {
+    background: #d5dce4;
+    color: #12171c;
+}
+
+html.zwbRczDark .zwbRczMsgRow.is-error .zwbRczMsgNoNumber {
+    background: #e23b3b;
+    color: #fff;
+}
+
+html.zwbRczDark .zwbRczMsgRow.is-warning .zwbRczMsgNoNumber {
+    background: #ffc83d;
+    color: #2b1f00;
+}
+
+html.zwbRczDark .zwbRczMsgNoClass {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* znaczniki w nagłówku panelu */
+html.zwbRczDark .zwbRczChip.is-error {
+    background: rgba(240, 59, 59, 0.18);
+    color: #ff9b9b;
+}
+
+html.zwbRczDark .zwbRczChip.is-warning {
+    background: rgba(255, 200, 61, 0.16);
+    color: #ffd979;
+}
+
+html.zwbRczDark .zwbRczChip.is-info {
+    background: rgba(61, 155, 255, 0.18);
+    color: #9ccbff;
+}
+
+/* płynne przejście kolorów przy przełączaniu */
+html.zwbRczDark .zwbRczMsgRow,
+html.zwbRczDark .zwbRczChip,
+html.zwbRczDark .zwbTl,
+.zwbRczMsgRow,
+.zwbRczChip {
+    transition: background-color 200ms ease, color 200ms ease;
 }

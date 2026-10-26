@@ -8,9 +8,10 @@ sap.ui.define([
     "zwb/rcz/ext/RangeSelection",
     "zwb/rcz/ext/SelectionReport",
     "zwb/rcz/ext/MessagePanel",
-    "sap/ui/core/format/DateFormat"
+    "sap/ui/core/format/DateFormat",
+    "zwb/rcz/ext/ThemeSwitch"
 ], function (ControllerExtension, Element, MessageToast, Filter, FilterOperator,
-             MonthTotals, RangeSelection, SelectionReport, MessagePanel, DateFormat) {
+             MonthTotals, RangeSelection, SelectionReport, MessagePanel, DateFormat, ThemeSwitch) {
     "use strict";
 
     // Rozszerzenie strony listy dni (manifest.json -> sap.ui5/extends).
@@ -94,6 +95,7 @@ sap.ui.define([
                 try {
                     this._attachCellEvents();
                     this._updateColumnButtons();
+                    this._registerThemeButton();
                 } catch (error) {
                     // eslint-disable-next-line no-console
                     console.error("[ZWB_RCZ] Obsługa dwukliku", error);
@@ -174,6 +176,21 @@ sap.ui.define([
             }).forEach(function (button) {
                 var isShowButton = /showAllColumns$/.test(button.getId());
                 button.setVisible(isShowButton ? hidden : !hidden);
+            });
+        },
+
+        // ------------------------------------------------------------------ tryb jasny / ciemny
+        // Przycisk "Tryb ciemny / Tryb jasny" na górze strony (manifest: akcja zwbTheme)
+        toggleTheme: function () {
+            ThemeSwitch.toggle();
+        },
+
+        _registerThemeButton: function () {
+            ThemeSwitch.setTexts(this._getText("themeDark"), this._getText("themeLight"));
+            Element.registry.filter(function (element) {
+                return element.isA("sap.m.Button") && /CustomAction::zwbTheme$/.test(element.getId());
+            }).forEach(function (button) {
+                ThemeSwitch.register(button);
             });
         },
 

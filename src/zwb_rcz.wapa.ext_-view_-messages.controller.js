@@ -3,8 +3,9 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/ui/core/routing/History",
-    "sap/ui/core/format/DateFormat"
-], function (PageController, Filter, FilterOperator, History, DateFormat) {
+    "sap/ui/core/format/DateFormat",
+    "zwb/rcz/ext/ThemeSwitch"
+], function (PageController, Filter, FilterOperator, History, DateFormat, ThemeSwitch) {
     "use strict";
 
     // Ekran wszystkich komunikatów (manifest.json -> trasa Messages: Messages/{pernr}/{fpper}).
@@ -15,10 +16,16 @@ sap.ui.define([
 
     return PageController.extend("zwb.rcz.ext.view.Messages", {
 
+        // Przycisk "Tryb ciemny / Tryb jasny" w nagłówku strony
+        onToggleTheme: function () {
+            ThemeSwitch.toggle();
+        },
+
         onInit: function () {
             if (PageController.prototype.onInit) {
                 PageController.prototype.onInit.apply(this, arguments);
             }
+            ThemeSwitch.register(this.byId("themeButton"));
             var router = this.getAppComponent().getRouter();
             router.getRoute(ROUTE).attachPatternMatched(function (event) {
                 this._load(event.getParameter("arguments"));

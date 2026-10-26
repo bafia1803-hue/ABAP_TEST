@@ -9,10 +9,24 @@
             height: 100%;
         }
     </style>
+    <script>
+        // Tryb jasny / ciemny zapamiętany w przeglądarce (ext/ThemeSwitch.js) - ustawiany przed startem UI5
+        (function () {
+            var dark = false;
+            try {
+                dark = window.localStorage.getItem("zwb.rcz.theme") === "dark";
+            } catch (error) {
+                dark = false;
+            }
+            window["sap-ui-config"] = { theme: dark ? "sap_horizon_dark" : "sap_horizon" };
+            if (dark) {
+                document.documentElement.className += " zwbRczDark";
+            }
+        }());
+    </script>
     <script
         id="sap-ui-bootstrap"
         src="/sap/public/bc/ui5_ui5/resources/sap-ui-core.js"
-        data-sap-ui-theme="sap_horizon"
         data-sap-ui-language="pl"
         data-sap-ui-resourceroots='{ "zwb.rcz": "./" }'
         data-sap-ui-oninit="module:sap/ui/core/ComponentSupport"

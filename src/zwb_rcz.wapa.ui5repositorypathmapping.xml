@@ -112,6 +112,12 @@
    internal_rep_path = "ext/SelectionReport.js" />
 
   <MappingEntry
+   path              = "ext/ThemeSwitch.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/ThemeSwitch.js" />
+
+  <MappingEntry
    path              = "ext/TimeValues.js"
    is_folder         = ""
    internal_rep      = "B"

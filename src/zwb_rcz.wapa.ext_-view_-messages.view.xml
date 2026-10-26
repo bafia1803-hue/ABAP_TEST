@@ -9,6 +9,9 @@
         title="{i18n>msgPageTitle}"
         showNavButton="true"
         navButtonPress=".onNavBack">
+        <headerContent>
+            <Button id="themeButton" type="Transparent" press=".onToggleTheme" />
+        </headerContent>
         <content>
             <zwb:MessageBoard
                 id="messageBoard"

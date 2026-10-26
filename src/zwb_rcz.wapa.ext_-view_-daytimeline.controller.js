@@ -3,8 +3,9 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/ui/core/routing/History",
-    "sap/ui/core/format/DateFormat"
-], function (PageController, Filter, FilterOperator, History, DateFormat) {
+    "sap/ui/core/format/DateFormat",
+    "zwb/rcz/ext/ThemeSwitch"
+], function (PageController, Filter, FilterOperator, History, DateFormat, ThemeSwitch) {
     "use strict";
 
     // Strona osi czasu dnia (manifest.json -> cel TimeResultDayObjectPage).
@@ -74,10 +75,16 @@ sap.ui.define([
 
     return PageController.extend("zwb.rcz.ext.view.DayTimeline", {
 
+        // Przycisk "Tryb ciemny / Tryb jasny" w nagłówku strony
+        onToggleTheme: function () {
+            ThemeSwitch.toggle();
+        },
+
         onInit: function () {
             if (PageController.prototype.onInit) {
                 PageController.prototype.onInit.apply(this, arguments);
             }
+            ThemeSwitch.register(this.byId("themeButton"));
             this._cache = {};
             this._current = null;
 

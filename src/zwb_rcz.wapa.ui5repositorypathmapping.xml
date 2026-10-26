@@ -40,16 +40,16 @@
    internal_rep_path = "ext/control/DayTimeline.js" />
 
   <MappingEntry
+   path              = "ext/control/MessageBadges.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/control/MessageBadges.js" />
+
+  <MappingEntry
    path              = "ext/control/MessageBoard.js"
    is_folder         = ""
    internal_rep      = "B"
    internal_rep_path = "ext/control/MessageBoard.js" />
-
-  <MappingEntry
-   path              = "ext/Formatter.js"
-   is_folder         = ""
-   internal_rep      = "B"
-   internal_rep_path = "ext/Formatter.js" />
 
   <MappingEntry
    path              = "ext/fragment"

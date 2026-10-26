@@ -1275,3 +1275,17 @@ body.zwbRczSplit #container {
     line-height: 1.25rem;
     font-weight: bold;
 }
+
+/* ikony w kolumnie "Komunikaty" (control/MessageBadges.js) */
+.zwbRczMsgBadgeIcon {
+    font-size: 0.875rem;
+    line-height: 1;
+}
+
+.zwbRczMsgBadge.is-error .zwbRczMsgBadgeIcon {
+    color: #d20a0a;
+}
+
+.zwbRczMsgBadge.is-warning .zwbRczMsgBadgeIcon {
+    color: #e2a100;
+}

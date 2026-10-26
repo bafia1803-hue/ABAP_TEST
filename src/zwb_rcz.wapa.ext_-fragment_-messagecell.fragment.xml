@@ -1,17 +1,6 @@
-<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
-    <!-- Kolumna komunikatów dnia: czerwona ikona + liczba błędów, żółta ikona + liczba ostrzeżeń.
-         Ikona pojawia się tylko, gdy liczba jest większa od zera.
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns:zwb="zwb.rcz.ext.control">
+    <!-- Kolumna komunikatów dnia: ikona tylko, gdy liczba > 0 (logika w control/MessageBadges.js).
          Kliknięcie otwiera panel komunikatów dnia (ext/ListReportExt.controller.js). -->
-    <HBox alignItems="Center" class="zwbRczMsgCell" core:require="{ Formatter: 'zwb/rcz/ext/Formatter' }">
-        <HBox alignItems="Center" class="zwbRczMsgBadge is-error"
-              visible="{ path: 'ErrorCount', targetType: 'any', formatter: 'Formatter.isPositive' }">
-            <core:Icon src="sap-icon://error" color="#d20a0a" size="0.875rem" />
-            <Text text="{ErrorCount}" class="zwbRczMsgCount" />
-        </HBox>
-        <HBox alignItems="Center" class="zwbRczMsgBadge is-warning"
-              visible="{ path: 'WarningCount', targetType: 'any', formatter: 'Formatter.isPositive' }">
-            <core:Icon src="sap-icon://alert" color="#e2a100" size="0.875rem" />
-            <Text text="{WarningCount}" class="zwbRczMsgCount" />
-        </HBox>
-    </HBox>
+    <zwb:MessageBadges errors="{ path: 'ErrorCount', targetType: 'any' }"
+                       warnings="{ path: 'WarningCount', targetType: 'any' }" />
 </core:FragmentDefinition>

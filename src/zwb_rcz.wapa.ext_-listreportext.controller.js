@@ -51,10 +51,14 @@ sap.ui.define([
         });
     }
 
-    function findFirst(className) {
-        return Element.registry.filter(function (element) {
+    function findFirst(className, idSuffix) {
+        var found = Element.registry.filter(function (element) {
             return element.isA(className);
-        })[0];
+        });
+        var withId = found.filter(function (element) {
+            return !idSuffix || element.getId().slice(-idSuffix.length) === idSuffix;
+        });
+        return withId[0] || found[0];
     }
 
     return ControllerExtension.extend("zwb.rcz.ext.ListReportExt", {
@@ -69,7 +73,13 @@ sap.ui.define([
             },
 
             onAfterRendering: function () {
-                this._attachCellEvents();
+                // Błąd w obsłudze dwukliku nie może zablokować strony
+                try {
+                    this._attachCellEvents();
+                } catch (error) {
+                    // eslint-disable-next-line no-console
+                    console.error("[ZWB_RCZ] Obsługa dwukliku", error);
+                }
             },
 
             routing: {
@@ -85,6 +95,7 @@ sap.ui.define([
         hideEmptyColumns: function () {
             var that = this;
             var table = this._getTable();
+            this._attachCellEvents();
             var contexts = this._getRowContexts(table);
 
             if (!contexts.length) {
@@ -127,13 +138,18 @@ sap.ui.define([
         },
 
         showAllColumns: function () {
-            this._restoreColumns(this._getTable());
+            var table = this._getTable();
+            if (table) {
+                this._restoreColumns(table);
+            }
             MessageToast.show(this._getText("columnsShown"));
         },
 
         // ------------------------------------------------------------------ tabela i dane
+        // Tabela listy szukana w rejestrze kontrolek (ExtensionAPI.byId nie zwraca
+        // wewnętrznej tabeli - zgłasza wyjątek)
         _getTable: function () {
-            return this.base.getExtensionAPI().byId(TABLE_ID) || findFirst("sap.ui.mdc.Table");
+            return findFirst("sap.ui.mdc.Table", TABLE_ID);
         },
 
         _getText: function (key, args) {
@@ -185,7 +201,7 @@ sap.ui.define([
             this._cellEventsAttached = true;
 
             table.initialized().then(function () {
-                var innerTable = table.getAggregation("_content") || findFirst("sap.ui.table.Table");
+                var innerTable = table.getAggregation("_content") || findFirst("sap.ui.table.Table", "");
                 if (!innerTable || !innerTable.attachCellClick) {
                     log("Brak tabeli Grid - dwuklik nie będzie działał");
                     that._cellEventsAttached = false;
@@ -194,6 +210,10 @@ sap.ui.define([
                 innerTable.attachCellClick(that._onCellClick, that);
                 innerTable.attachBrowserEvent("dblclick", that._onDoubleClick, that);
                 log("Obsługa dwukliku włączona");
+            }).catch(function (error) {
+                that._cellEventsAttached = false;
+                // eslint-disable-next-line no-console
+                console.error("[ZWB_RCZ] Obsługa dwukliku", error);
             });
         },
 

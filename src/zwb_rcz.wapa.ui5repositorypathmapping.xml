@@ -64,6 +64,30 @@
    internal_rep_path = "ext/ListReportExt.controller.js" />
 
   <MappingEntry
+   path              = "ext/MonthTotals.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/MonthTotals.js" />
+
+  <MappingEntry
+   path              = "ext/RangeSelection.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/RangeSelection.js" />
+
+  <MappingEntry
+   path              = "ext/SelectionReport.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/SelectionReport.js" />
+
+  <MappingEntry
+   path              = "ext/TimeValues.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/TimeValues.js" />
+
+  <MappingEntry
    path              = "ext/view"
    is_folder         = "X"
    internal_rep      = ""

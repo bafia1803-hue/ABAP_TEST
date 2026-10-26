@@ -3,8 +3,12 @@ sap.ui.define([
     "sap/ui/core/Element",
     "sap/m/MessageToast",
     "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator"
-], function (ControllerExtension, Element, MessageToast, Filter, FilterOperator) {
+    "sap/ui/model/FilterOperator",
+    "zwb/rcz/ext/MonthTotals",
+    "zwb/rcz/ext/RangeSelection",
+    "zwb/rcz/ext/SelectionReport"
+], function (ControllerExtension, Element, MessageToast, Filter, FilterOperator,
+             MonthTotals, RangeSelection, SelectionReport) {
     "use strict";
 
     // Rozszerzenie strony listy dni (manifest.json -> sap.ui5/extends).
@@ -12,6 +16,9 @@ sap.ui.define([
     //    Kolumna jest pusta, gdy w KAŻDYM dniu wybranego okresu ma 00:00.
     // 2. Przejście do osi czasu dnia: strzałka / kliknięcie wiersza - oś czasu bez wyróżnienia,
     //    dwuklik w komórkę - oś czasu z wyróżnionymi rodzajami czasu z tej kolumny.
+    // 3. Wiersz "Suma miesiąca" pod tabelą (MonthTotals).
+    // 4. Zaznaczanie obszaru przeciągnięciem myszą i karta "Raport zaznaczenia" (RangeSelection,
+    //    SelectionReport). Przeciągnięcie nie otwiera osi czasu.
 
     var TABLE_ID = "fe::table::TimeResultDay::LineItem";
     var ENTITY_SET = "/TimeResultDay";
@@ -129,6 +136,7 @@ sap.ui.define([
                         that._hiddenColumns.push({ column: column, index: allColumns.indexOf(column) });
                         table.removeColumn(column);
                     });
+                    that._afterColumnsChanged();
                     log("Ukryte kolumny", emptyColumns.map(getFieldName));
                     MessageToast.show(that._getText("columnsHidden", [emptyColumns.length]));
                 })
@@ -156,6 +164,55 @@ sap.ui.define([
 
         _getText: function (key, args) {
             return this.base.getView().getModel("i18n").getResourceBundle().getText(key, args);
+        },
+
+        // Kolumna tabeli Grid -> pole, nagłówek i czy to kolumna godzin
+        _columnInfo: function (innerColumn) {
+            var mdcColumn = Element.registry.get(String(innerColumn.getId()).replace(/-innerColumn$/, ""));
+            var field = mdcColumn && mdcColumn.isA("sap.ui.mdc.table.Column") ? getFieldName(mdcColumn) : "";
+            return {
+                field: field,
+                label: mdcColumn && mdcColumn.getHeader ? mdcColumn.getHeader() : field,
+                isTime: isTimeColumn(field)
+            };
+        },
+
+        // Po ukryciu / przywróceniu kolumn zaznaczenie traci sens, a sumy trzeba przeliczyć
+        _afterColumnsChanged: function () {
+            if (this._selection) {
+                this._selection.clear();
+            }
+            if (this._totals) {
+                this._totals.refresh();
+            }
+        },
+
+        // Suma miesiąca, zaznaczanie obszaru i raport - po utworzeniu wewnętrznej tabeli
+        _attachSummaryFeatures: function (innerTable) {
+            var that = this;
+            var columnInfo = this._columnInfo.bind(this);
+
+            innerTable.addStyleClass("zwbRczTable");
+            this._totals = new MonthTotals(innerTable, {
+                label: this._getText("monthTotal"),
+                columnInfo: columnInfo
+            });
+            this._report = new SelectionReport({
+                getText: this._getText.bind(this),
+                onClose: function () {
+                    that._selection.clear();
+                }
+            });
+            this._selection = new RangeSelection(innerTable, {
+                columnInfo: columnInfo,
+                onSelect: function (selection) {
+                    clearTimeout(that._pendingNavigation);
+                    that._report.show(selection);
+                },
+                onClear: function () {
+                    that._report.hide();
+                }
+            });
         },
 
         _getRowContexts: function (table) {
@@ -191,6 +248,7 @@ sap.ui.define([
                     table.insertColumn(hidden.column, hidden.index);
                 });
             this._hiddenColumns = [];
+            this._afterColumnsChanged();
         },
 
         // ------------------------------------------------------------------ kliknięcia i nawigacja
@@ -211,7 +269,8 @@ sap.ui.define([
                 }
                 innerTable.attachCellClick(that._onCellClick, that);
                 innerTable.attachBrowserEvent("dblclick", that._onDoubleClick, that);
-                log("Obsługa dwukliku włączona");
+                that._attachSummaryFeatures(innerTable);
+                log("Obsługa dwukliku, sumy i zaznaczania włączona");
             }).catch(function (error) {
                 that._cellEventsAttached = false;
                 // eslint-disable-next-line no-console
@@ -227,7 +286,7 @@ sap.ui.define([
         },
 
         _onDoubleClick: function () {
-            if (!this._lastCell || !this._lastCell.context) {
+            if (!this._lastCell || !this._lastCell.context || this._isDragSelection()) {
                 return;
             }
             clearTimeout(this._pendingNavigation);
@@ -239,10 +298,15 @@ sap.ui.define([
             this._navigateToDay(this._lastCell.context, isTimeColumn(fieldName) ? fieldName : "");
         },
 
+        _isDragSelection: function () {
+            return !!(this._selection && this._selection.wasDragging());
+        },
+
         _delayNavigation: function (context) {
             var that = this;
             clearTimeout(this._pendingNavigation);
-            if (!context) {
+            // Kliknięcie kończące zaznaczanie obszaru nie otwiera osi czasu
+            if (!context || this._isDragSelection()) {
                 return;
             }
             this._pendingNavigation = setTimeout(function () {
@@ -252,6 +316,9 @@ sap.ui.define([
         },
 
         _navigateToDay: function (context, focusField) {
+            if (this._selection) {
+                this._selection.clear();
+            }
             var parameters = { key: getContextKey(context) };
             if (focusField) {
                 parameters["?query"] = { focus: focusField };

@@ -16,10 +16,28 @@
    internal_rep_path = "" />
 
   <MappingEntry
-   path              = "ext/ColumnVisibility.js"
+   path              = "ext/ListReportExt.controller.js"
    is_folder         = ""
    internal_rep      = "B"
-   internal_rep_path = "ext/ColumnVisibility.js" />
+   internal_rep_path = "ext/ListReportExt.controller.js" />
+
+  <MappingEntry
+   path              = "ext/view"
+   is_folder         = "X"
+   internal_rep      = ""
+   internal_rep_path = "" />
+
+  <MappingEntry
+   path              = "ext/view/DayTimeline.controller.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/view/DayTimeline.controller.js" />
+
+  <MappingEntry
+   path              = "ext/view/DayTimeline.view.xml"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/view/DayTimeline.view.xml" />
 
   <MappingEntry
    path              = "i18n"

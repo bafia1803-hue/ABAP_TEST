@@ -34,6 +34,7 @@
             "libs": {
                 "sap.m": {},
                 "sap.ui.core": {},
+                "sap.ui.unified": {},
                 "sap.fe.templates": {}
             }
         },
@@ -97,26 +98,105 @@
                                         "rowCountMode": "Auto",
                                         "condensedTableLayout": true,
                                         "enableExport": true,
-                                        "personalization": {
-                                            "column": true,
-                                            "sort": true,
-                                            "filter": false
-                                        }
+                                        "personalization": true
                                     },
                                     "actions": {
                                         "hideEmptyColumns": {
-                                            "press": "zwb.rcz.ext.ColumnVisibility.hideEmptyColumns",
+                                            "press": ".extension.zwb.rcz.ext.ListReportExt.hideEmptyColumns",
                                             "text": "{i18n>hideEmptyColumns}",
                                             "enabled": true,
                                             "visible": true,
                                             "requiresSelection": false
                                         },
                                         "showAllColumns": {
-                                            "press": "zwb.rcz.ext.ColumnVisibility.showAllColumns",
+                                            "press": ".extension.zwb.rcz.ext.ListReportExt.showAllColumns",
                                             "text": "{i18n>showAllColumns}",
                                             "enabled": true,
                                             "visible": true,
                                             "requiresSelection": false
+                                        }
+                                    },
+                                    "columns": {
+                                        "DataField::PlanTime": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::WorkedTime": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::Shortage": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::SkippedTime": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtDailyBd": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtDaily50": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtDailyComp": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtDaily100": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtAvgPaidBd": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtAvgPaid": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OvtAvgComp": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::ExtraHours": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::Extra50": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::Extra100": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::OnCall": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::SecondShift": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::NightHours": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::SundayHoliday": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::DaysToGive": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::DaysTaken": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::Absence": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::AbsencePaid": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::PrivExitWork": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::PrivExitDeduct": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::MakeUpHours": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::PrivExitBalance": {
+                                            "width": "5rem"
+                                        },
+                                        "DataField::Datcz": {
+                                            "width": "7rem"
                                         }
                                     }
                                 }
@@ -127,12 +207,21 @@
                 "TimeResultDayObjectPage": {
                     "type": "Component",
                     "id": "TimeResultDayObjectPage",
-                    "name": "sap.fe.templates.ObjectPage",
+                    "name": "sap.fe.core.fpm",
                     "options": {
                         "settings": {
-                            "editableHeaderContent": false,
+                            "viewName": "zwb.rcz.ext.view.DayTimeline",
                             "contextPath": "/TimeResultDay"
                         }
+                    }
+                }
+            }
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "zwb.rcz.ext.ListReportExt"
                     }
                 }
             }

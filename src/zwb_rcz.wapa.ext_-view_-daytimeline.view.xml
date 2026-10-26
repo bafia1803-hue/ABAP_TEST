@@ -1,0 +1,68 @@
+<mvc:View
+    controllerName="zwb.rcz.ext.view.DayTimeline"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:unified="sap.ui.unified">
+    <!-- Oś czasu jednego dnia: wiersz = niepusty rodzaj czasu, pasek = wycinek GODZOD - GODZDO -->
+    <Page
+        id="dayTimelinePage"
+        title="{timeline>/title}"
+        showNavButton="true"
+        navButtonPress=".onNavBack"
+        busy="{timeline>/busy}"
+        busyIndicatorDelay="0">
+        <content>
+            <MessageStrip
+                text="{timeline>/focusText}"
+                visible="{= !!${timeline>/focusText} }"
+                type="Information"
+                showIcon="true"
+                class="sapUiSmallMargin" />
+            <MessageStrip
+                text="{i18n>timelineNoData}"
+                visible="{= !${timeline>/busy} &amp;&amp; ${timeline>/rows}.length === 0 }"
+                type="Warning"
+                showIcon="true"
+                class="sapUiSmallMargin" />
+            <PlanningCalendar
+                id="dayTimeline"
+                startDate="{timeline>/startDate}"
+                viewKey="DayHours"
+                rows="{path: 'timeline>/rows', templateShareable: false}"
+                appointmentsVisualization="Filled"
+                showWeekNumbers="false"
+                showDayNamesLine="false"
+                showEmptyIntervalHeaders="false"
+                singleSelection="false"
+                stickyHeader="true">
+                <views>
+                    <PlanningCalendarView
+                        key="DayHours"
+                        intervalType="Hour"
+                        description="{i18n>timelineView}"
+                        intervalsS="6"
+                        intervalsM="12"
+                        intervalsL="24" />
+                </views>
+                <rows>
+                    <PlanningCalendarRow
+                        title="{timeline>title}"
+                        text="{timeline>text}"
+                        selected="{timeline>focused}"
+                        icon="{timeline>icon}"
+                        appointments="{path: 'timeline>appointments', templateShareable: false}">
+                        <appointments>
+                            <unified:CalendarAppointment
+                                startDate="{timeline>start}"
+                                endDate="{timeline>end}"
+                                title="{timeline>title}"
+                                text="{timeline>text}"
+                                type="{timeline>type}"
+                                tooltip="{timeline>tooltip}" />
+                        </appointments>
+                    </PlanningCalendarRow>
+                </rows>
+            </PlanningCalendar>
+        </content>
+    </Page>
+</mvc:View>

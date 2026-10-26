@@ -40,6 +40,14 @@ CLASS zcl_wb_rcz_day_query DEFINITION
       RETURNING
         VALUE(rv_text) TYPE string.
 
+    "! Kolumna aplikacji (pole ZC_WB_RCZ_DAY, np. WORKEDTIME), do której należy rodzaj czasu;
+    "! pusta, gdy rodzaj czasu nie należy do żadnej kolumny
+    CLASS-METHODS get_column
+      IMPORTING
+        iv_rodcz         TYPE /querc/rcz_e_rodcz
+      RETURNING
+        VALUE(rv_column) TYPE fieldname.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -322,6 +330,18 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
           COLLECT ls_total INTO rt_totals.
         ENDIF.
       ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_column.
+
+    LOOP AT gt_columns INTO DATA(ls_column).
+      IF iv_rodcz IN ls_column-rodcz.
+        rv_column = ls_column-name.
+        RETURN.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

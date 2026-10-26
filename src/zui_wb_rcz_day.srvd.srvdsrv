@@ -1,0 +1,4 @@
+@EndUserText.label: 'Wyniki rozliczenia czasu pracy'
+define service ZUI_WB_RCZ_DAY {
+  expose ZC_WB_RCZ_DAY as TimeResultDay;
+}

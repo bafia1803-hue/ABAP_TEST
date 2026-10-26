@@ -59,6 +59,17 @@
     <item>
      <ATTRIBUTES>
       <APPLNAME>ZWB_RCZ</APPLNAME>
+      <PAGEKEY>EXT/FORMATTER.JS</PAGEKEY>
+      <PAGENAME>ext/Formatter.js</PAGENAME>
+      <PAGETYPE>X</PAGETYPE>
+      <LAYOUTLANGU>L</LAYOUTLANGU>
+      <VERSION>A</VERSION>
+      <LANGU>L</LANGU>
+     </ATTRIBUTES>
+    </item>
+    <item>
+     <ATTRIBUTES>
+      <APPLNAME>ZWB_RCZ</APPLNAME>
       <PAGEKEY>EXT/FRAGMENT/DATECELL.FRAGMENT.XML</PAGEKEY>
       <PAGENAME>ext/fragment/DateCell.fragment.xml</PAGENAME>
       <PAGETYPE>X</PAGETYPE>

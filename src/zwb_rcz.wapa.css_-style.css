@@ -894,50 +894,139 @@
     line-height: 1.25rem;
 }
 
-.zwbRczMsgItem {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-    padding: 0.75rem 1rem;
+/* lista komunikatów jako tabela: ikona | data | treść | godziny | nr komunikatu */
+.zwbRczMsgTable {
     border-radius: 0.625rem;
-    border-left: 0.25rem solid transparent;
+    overflow: hidden;
     background: var(--sapGroup_ContentBackground, #fff);
     box-shadow: 0 0 0 1px var(--sapList_BorderColor, #e5e5e5);
 }
 
-.zwbRczMsgItem.is-error {
-    border-left-color: #d20a0a;
-    background: #fff6f6;
+.zwbRczMsgRow {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 6.5rem 9.5rem;
+    align-items: center;
+    column-gap: 0.75rem;
+    padding: 0.625rem 1rem 0.625rem 0.75rem;
+    border-top: 1px solid var(--sapList_BorderColor, #e5e5e5);
+    border-left: 0.25rem solid transparent;
 }
 
-.zwbRczMsgItem.is-warning {
-    border-left-color: #f2b200;
-    background: #fffbea;
+.zwbRczMsgTable.has-date .zwbRczMsgRow {
+    grid-template-columns: 2.25rem 8.5rem minmax(0, 1fr) 6.5rem 9.5rem;
 }
 
-.zwbRczMsgItem.is-info {
-    border-left-color: #0070f2;
+.zwbRczMsgRow.is-head {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-top: none;
+    background: var(--sapList_HeaderBackground, #f5f6f7);
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--sapContent_LabelColor, #556b82);
 }
 
-.zwbRczMsgItem .zwbRczMsgIcon {
-    margin-top: 0.0625rem;
+.zwbRczMsgRow.is-head > span {
+    font-size: 0.75rem;
+    color: var(--sapContent_LabelColor, #556b82);
 }
 
-.zwbRczMsgBody {
-    min-width: 0;
+.zwbRczMsgRow.is-error { border-left-color: #d20a0a; }
+.zwbRczMsgRow.is-warning { border-left-color: #f2b200; }
+.zwbRczMsgRow.is-info { border-left-color: #0070f2; }
+
+.zwbRczMsgRow:not(.is-head):hover {
+    background: var(--sapList_Hover_Background, #eaecee);
 }
 
-.zwbRczMsgText {
+.zwbRczMsgCellIcon {
+    display: flex;
+    justify-content: center;
+}
+
+.zwbRczMsgCellDate {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.zwbRczMsgDay {
+    font-size: 0.9375rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    color: var(--sapTextColor, #1d2d3e);
+}
+
+.zwbRczMsgWeekday {
+    font-size: 0.75rem;
+    color: var(--sapContent_LabelColor, #556b82);
+}
+
+.zwbRczMsgDay.is-sunday,
+.zwbRczMsgWeekday.is-sunday {
+    color: #c00000;
+}
+
+.zwbRczMsgCellText {
     font-size: 0.875rem;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
 
-.zwbRczMsgMeta {
-    margin-top: 0.25rem;
+.zwbRczMsgCellTime {
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--sapTextColor, #1d2d3e);
+}
+
+.zwbRczMsgCellNo {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.zwbRczMsgRow.is-head .zwbRczMsgCellNo {
+    justify-content: flex-end;
+}
+
+.zwbRczMsgNo {
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    font-family: "72Mono", Consolas, "Courier New", monospace;
     font-size: 0.75rem;
+    box-shadow: 0 0 0 1px var(--sapList_BorderColor, #d9d9d9);
+}
+
+.zwbRczMsgNoNumber {
+    padding: 0.125rem 0.4375rem;
+    font-weight: bold;
+    background: #1d2d3e;
+    color: #fff;
+}
+
+.zwbRczMsgRow.is-error .zwbRczMsgNoNumber { background: #b00000; }
+.zwbRczMsgRow.is-warning .zwbRczMsgNoNumber { background: #8a6200; }
+
+.zwbRczMsgNoClass {
+    padding: 0.125rem 0.4375rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: var(--sapField_Background, #fff);
     color: var(--sapContent_LabelColor, #556b82);
+}
+
+@media (max-width: 760px) {
+    .zwbRczMsgRow,
+    .zwbRczMsgTable.has-date .zwbRczMsgRow {
+        grid-template-columns: 2rem minmax(0, 1fr);
+        row-gap: 0.25rem;
+    }
+    .zwbRczMsgRow.is-head { display: none; }
+    .zwbRczMsgRow > :not(.zwbRczMsgCellIcon) { grid-column: 2; }
+    .zwbRczMsgCellNo { justify-content: flex-start; }
 }
 
 /* ======================================================================

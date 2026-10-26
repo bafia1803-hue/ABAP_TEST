@@ -33,6 +33,18 @@ sap.ui.define([
         return element;
     }
 
+    var LABELS = {
+        msgColDate: "Data",
+        msgColText: "Komunikat",
+        msgColTime: "Godziny",
+        msgColNumber: "Nr komunikatu"
+    };
+
+    function label(options, key) {
+        var text = options.getText(key);
+        return text && text !== key ? text : LABELS[key];
+    }
+
     function rankOf(message) {
         return message.SeverityRank || (message.Tykom === "E" ? 1 : message.Tykom === "W" ? 2 : 3);
     }
@@ -74,7 +86,8 @@ sap.ui.define([
         // options: { getText(key, args), showDate }
         render: function (container, messages, options) {
             var that = this;
-            var dateFormat = DateFormat.getDateInstance({ pattern: "EEE, d MMM yyyy" });
+            var dayFormat = DateFormat.getDateInstance({ pattern: "dd.MM.yyyy" });
+            var weekdayFormat = DateFormat.getDateInstance({ pattern: "EEEE" });
             container.innerHTML = "";
 
             if (!messages.length) {
@@ -97,27 +110,54 @@ sap.ui.define([
                 header.appendChild(create("span", "zwbRczMsgGroupCount", String(items.length)));
                 section.appendChild(header);
 
+                var table = create("div", "zwbRczMsgTable" + (options.showDate ? " has-date" : ""));
+                var head = create("div", "zwbRczMsgRow is-head");
+                head.appendChild(create("span", "zwbRczMsgCellIcon"));
+                if (options.showDate) {
+                    head.appendChild(create("span", "zwbRczMsgCellDate", label(options, "msgColDate")));
+                }
+                head.appendChild(create("span", "zwbRczMsgCellText", label(options, "msgColText")));
+                head.appendChild(create("span", "zwbRczMsgCellTime", label(options, "msgColTime")));
+                head.appendChild(create("span", "zwbRczMsgCellNo", label(options, "msgColNumber")));
+                table.appendChild(head);
+
                 items.forEach(function (message) {
-                    var item = create("div", "zwbRczMsgItem is-" + group.key);
-                    item.appendChild(that.icon(group.key));
-                    var body = create("div", "zwbRczMsgBody");
-                    body.appendChild(create("div", "zwbRczMsgText", message.Tekom || ""));
-                    var meta = [];
-                    if (options.showDate && message.Dakom) {
-                        meta.push(dateFormat.format(toDate(message.Dakom)));
+                    var row = create("div", "zwbRczMsgRow is-" + group.key);
+                    var iconCell = create("span", "zwbRczMsgCellIcon");
+                    iconCell.appendChild(that.icon(group.key));
+                    row.appendChild(iconCell);
+
+                    if (options.showDate) {
+                        var dateCell = create("span", "zwbRczMsgCellDate");
+                        if (message.Dakom) {
+                            var date = toDate(message.Dakom);
+                            var weekend = date.getDay() === 0 ? " is-sunday" : date.getDay() === 6 ? " is-saturday" : "";
+                            dateCell.appendChild(create("span", "zwbRczMsgDay" + weekend, dayFormat.format(date)));
+                            dateCell.appendChild(create("span", "zwbRczMsgWeekday" + weekend, weekdayFormat.format(date)));
+                        }
+                        row.appendChild(dateCell);
                     }
-                    if (message.BeginTime || message.EndTime) {
-                        meta.push((message.BeginTime || "") + " – " + (message.EndTime || ""));
+
+                    row.appendChild(create("span", "zwbRczMsgCellText", message.Tekom || ""));
+
+                    var time = message.BeginTime || message.EndTime
+                        ? (message.BeginTime || "") + "–" + (message.EndTime || "") : "";
+                    row.appendChild(create("span", "zwbRczMsgCellTime", time));
+
+                    var noCell = create("span", "zwbRczMsgCellNo");
+                    var msgid = String(message.Msgid || "").trim();
+                    var msgno = String(message.Msgno || "").trim();
+                    if (msgid || msgno) {
+                        var chip = create("span", "zwbRczMsgNo");
+                        chip.title = msgid + " " + msgno;
+                        chip.appendChild(create("span", "zwbRczMsgNoNumber", msgno));
+                        chip.appendChild(create("span", "zwbRczMsgNoClass", msgid));
+                        noCell.appendChild(chip);
                     }
-                    if (message.Msgid || message.Msgno) {
-                        meta.push(String(message.Msgid || "").trim() + " " + String(message.Msgno || "").trim());
-                    }
-                    if (meta.length) {
-                        body.appendChild(create("div", "zwbRczMsgMeta", meta.join("  ·  ")));
-                    }
-                    item.appendChild(body);
-                    section.appendChild(item);
+                    row.appendChild(noCell);
+                    table.appendChild(row);
                 });
+                section.appendChild(table);
                 container.appendChild(section);
             });
         }

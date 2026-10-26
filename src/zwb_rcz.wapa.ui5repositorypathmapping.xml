@@ -46,6 +46,12 @@
    internal_rep_path = "ext/control/MessageBoard.js" />
 
   <MappingEntry
+   path              = "ext/Formatter.js"
+   is_folder         = ""
+   internal_rep      = "B"
+   internal_rep_path = "ext/Formatter.js" />
+
+  <MappingEntry
    path              = "ext/fragment"
    is_folder         = "X"
    internal_rep      = ""

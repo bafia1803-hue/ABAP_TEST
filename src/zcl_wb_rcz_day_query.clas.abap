@@ -1,7 +1,7 @@
 "! Dane aplikacji Fiori 'Wyniki rozliczenia czasu pracy' (custom entity ZC_WB_RCZ_DAY).
 "! Czyta /QUERC/RCZ_CZAS0 dla wybranego PERNR i FPPER, sumuje minuty CZILO
 "! dla grup rodzajów czasu (RODCZ) - każda grupa to jedna kolumna -
-"! i zwraca je w formacie hh:mm, jeden wiersz na dzień (DATCZ).
+"! i zwraca je w formacie hh:mm, jeden wiersz na dzień (DATCZ). Suma 0 = pusta komórka.
 "! Grupy rodzajów czasu są w CLASS_CONSTRUCTOR.
 CLASS zcl_wb_rcz_day_query DEFINITION
   PUBLIC
@@ -25,7 +25,7 @@ CLASS zcl_wb_rcz_day_query DEFINITION
 
     CLASS-METHODS class_constructor.
 
-    "! Jeden wiersz na dzień, kolumny = sumy minut grup rodzajów czasu w formacie hh:mm
+    "! Jeden wiersz na dzień, kolumny = sumy minut grup rodzajów czasu w formacie hh:mm (0 = puste)
     "! @parameter it_records | Rekordy z /QUERC/RCZ_CZAS0
     CLASS-METHODS build_days
       IMPORTING
@@ -308,7 +308,10 @@ CLASS zcl_wb_rcz_day_query IMPLEMENTATION.
                                                fpper  = ls_key-fpper
                                                datcz  = ls_key-datcz
                                                column = ls_column-name ]-minutes OPTIONAL ).
-        <lv_value> = format_minutes( lv_minutes ).
+        " Zero nic nie wnosi - komórka zostaje pusta
+        IF lv_minutes <> 0.
+          <lv_value> = format_minutes( lv_minutes ).
+        ENDIF.
       ENDLOOP.
 
       INSERT ls_day INTO TABLE rt_days.

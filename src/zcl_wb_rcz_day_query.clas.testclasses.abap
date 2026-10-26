@@ -48,25 +48,25 @@ CLASS ltcl_rcz_day IMPLEMENTATION.
     DATA(ls_day) = lt_days[ datcz = '20261001' ].
     cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-plantime )   exp = `08:00` ).
     cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-workedtime ) exp = `07:30` ).
-    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-shortage )   exp = `00:00` ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-shortage )   exp = `` ).
 
     ls_day = lt_days[ datcz = '20261002' ].
     cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-plantime )   exp = `07:30` ).
-    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-workedtime ) exp = `00:00` ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( ls_day-workedtime ) exp = `` ).
 
   ENDMETHOD.
 
 
   METHOD unknown_time_type_is_ignored.
 
-    " 305 (czas przerwy) jest zakomentowany w konfiguracji - dzień jest, ale same zera
+    " 305 (czas przerwy) jest zakomentowany w konfiguracji - dzień jest, ale wszystkie kolumny puste
     DATA(lt_records) = VALUE zcl_wb_rcz_day_query=>tt_time_records(
       ( pernr = '00000011' fpper = '202610' datcz = '20261003' rodcz = '305' czilo = 30 ) ).
 
     DATA(lt_days) = zcl_wb_rcz_day_query=>build_days( lt_records ).
 
     cl_abap_unit_assert=>assert_equals( act = lines( lt_days ) exp = 1 ).
-    cl_abap_unit_assert=>assert_equals( act = CONV string( lt_days[ 1 ]-plantime ) exp = `00:00` ).
+    cl_abap_unit_assert=>assert_equals( act = CONV string( lt_days[ 1 ]-plantime ) exp = `` ).
 
   ENDMETHOD.
 

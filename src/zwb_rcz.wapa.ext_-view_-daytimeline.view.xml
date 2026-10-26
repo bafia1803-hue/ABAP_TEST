@@ -2,56 +2,21 @@
     controllerName="zwb.rcz.ext.view.DayTimeline"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
-    xmlns:unified="sap.ui.unified">
-    <!-- Oś czasu jednego dnia: wiersz = niepusty rodzaj czasu, pasek = wycinek GODZOD - GODZDO.
-         Strzałki kalendarza przełączają dzień (onStartDateChange) - przeładowuje się tylko kalendarz. -->
+    xmlns:zwb="zwb.rcz.ext.control">
+    <!-- Oś czasu dnia: własna kontrolka (ext/control/DayTimeline.js) z animowaną zmianą dnia -->
     <Page
         id="dayTimelinePage"
-        title="{timeline>/title}"
+        title="{i18n>timelinePageTitle}"
         showNavButton="true"
         navButtonPress=".onNavBack">
         <content>
-            <PlanningCalendar
+            <zwb:DayTimeline
                 id="dayTimeline"
-                busy="{timeline>/busy}"
-                busyIndicatorDelay="200"
-                startDate="{timeline>/startDate}"
-                viewKey="DayHours"
-                rows="{path: 'timeline>/rows', templateShareable: false}"
-                appointmentsVisualization="Filled"
-                showWeekNumbers="false"
-                showDayNamesLine="false"
-                showEmptyIntervalHeaders="false"
-                singleSelection="false"
-                stickyHeader="true"
-                startDateChange=".onStartDateChange">
-                <views>
-                    <PlanningCalendarView
-                        key="DayHours"
-                        intervalType="Hour"
-                        description="{i18n>timelineView}"
-                        intervalsS="6"
-                        intervalsM="12"
-                        intervalsL="24" />
-                </views>
-                <rows>
-                    <PlanningCalendarRow
-                        title="{timeline>title}"
-                        text="{timeline>text}"
-                        selected="{timeline>focused}"
-                        appointments="{path: 'timeline>appointments', templateShareable: false}">
-                        <appointments>
-                            <unified:CalendarAppointment
-                                startDate="{timeline>start}"
-                                endDate="{timeline>end}"
-                                title="{timeline>title}"
-                                text="{timeline>text}"
-                                type="{timeline>type}"
-                                tooltip="{timeline>tooltip}" />
-                        </appointments>
-                    </PlanningCalendarRow>
-                </rows>
-            </PlanningCalendar>
+                prevText="{i18n>timelinePrev}"
+                nextText="{i18n>timelineNext}"
+                emptyText="{i18n>timelineEmpty}"
+                hintText="{i18n>timelineHint}"
+                navigate=".onNavigateDay" />
         </content>
     </Page>
 </mvc:View>

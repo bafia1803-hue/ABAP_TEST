@@ -338,9 +338,12 @@ CLASS zcl_wb_rcz_slice_query IMPLEMENTATION.
     DATA(lt_sorted) = it_intervals.
     SORT lt_sorted BY begin end.
 
+    FIELD-SYMBOLS <ls_previous> TYPE ty_interval.
+
     LOOP AT lt_sorted INTO DATA(ls_interval).
-      ASSIGN rt_intervals[ lines( rt_intervals ) ] TO FIELD-SYMBOL(<ls_previous>).
-      IF sy-subrc = 0 AND ls_interval-begin <= <ls_previous>-end.
+      UNASSIGN <ls_previous>.
+      ASSIGN rt_intervals[ lines( rt_intervals ) ] TO <ls_previous>.
+      IF <ls_previous> IS ASSIGNED AND ls_interval-begin <= <ls_previous>-end.
         " Styka się albo nakłada na poprzedni - wydłużamy poprzedni
         <ls_previous>-end = nmax( val1 = <ls_previous>-end
                                   val2 = ls_interval-end ).
